@@ -1,0 +1,120 @@
+generated: '2026-10-12'
+method: derived
+generator: derive-mcp-candidate.py
+source:
+- openapi/llmgateway-io-gateway-api-openapi.yml
+status: candidate
+deployment:
+  mode: none
+  auth: unknown
+  verified: probed
+note: 'No MCP server was found. The pre-flight posted tools/list to /mcp on api.llmgateway.io, docs.llmgateway.io, llmgateway.io, airside.llmgateway.io;
+  verdict gated (https://api.llmgateway.io/mcp answered 401: the edge authenticates before it routes, which proves nothing either way). Candidate
+  tools below are derived from the 21 operation(s) in the provider''s own OpenAPI (21 listed); they describe what a server WOULD expose, not one
+  that exists.'
+tools:
+- name: health
+  operationId: health
+  method: GET
+  path: /
+  description: Health check
+- name: v1_chat_completions
+  operationId: v1_chat_completions
+  method: POST
+  path: /v1/chat/completions
+  description: Chat Completions
+- name: v1_embeddings
+  operationId: v1_embeddings
+  method: POST
+  path: /v1/embeddings
+  description: Embeddings
+- name: v1_images_generations
+  operationId: v1_images_generations
+  method: POST
+  path: /v1/images/generations
+  description: Create image
+- name: v1_images_edits
+  operationId: v1_images_edits
+  method: POST
+  path: /v1/images/edits
+  description: Edit image
+- name: v1_key_retrieve
+  operationId: v1_key_retrieve
+  method: GET
+  path: /v1/key
+  description: Retrieve key status
+- name: v1_models
+  operationId: v1_models
+  method: GET
+  path: /v1/models
+  description: Models
+- name: v1_moderations
+  operationId: v1_moderations
+  method: POST
+  path: /v1/moderations
+  description: Moderations
+- name: v1_ocr
+  operationId: v1_ocr
+  method: POST
+  path: /v1/ocr
+  description: OCR
+- name: v1_rerank
+  operationId: v1_rerank
+  method: POST
+  path: /v1/rerank
+  description: Rerank
+- name: v1_search
+  operationId: v1_search
+  method: POST
+  path: /v1/search
+  description: Search
+- name: v1_decisions
+  operationId: v1_decisions
+  method: POST
+  path: /v1/decisions
+  description: Decisions
+- name: v1_systemone
+  operationId: v1_systemone
+  method: POST
+  path: /v1/systemone
+  description: System One
+- name: v1_messages
+  operationId: v1_messages
+  method: POST
+  path: /v1/messages
+  description: Anthropic Messages
+- name: v1_audio_speech
+  operationId: v1_audio_speech
+  method: POST
+  path: /v1/audio/speech
+  description: Create speech
+- name: v1_audio_transcriptions
+  operationId: v1_audio_transcriptions
+  method: POST
+  path: /v1/audio/transcriptions
+  description: Create transcription
+- name: v1_realtime_client_secrets
+  operationId: v1_realtime_client_secrets
+  method: POST
+  path: /v1/realtime/client_secrets
+  description: Create a realtime client secret
+- name: v1_videos_create
+  operationId: v1_videos_create
+  method: POST
+  path: /v1/videos
+  description: Create video
+- name: v1_videos_retrieve
+  operationId: v1_videos_retrieve
+  method: GET
+  path: /v1/videos/{video_id}
+  description: Retrieve video
+- name: v1_videos_log_content
+  operationId: v1_videos_log_content
+  method: GET
+  path: /v1/videos/logs/{log_id}/content
+  description: Video log content
+- name: v1_videos_content
+  operationId: v1_videos_content
+  method: GET
+  path: /v1/videos/{video_id}/content
+  description: Video content

@@ -1,0 +1,25 @@
+{
+  "@context": {
+    "@vocab": "https://llmgateway.io/schema#",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "llmgateway": "https://llmgateway.io/schema#",
+    "OpenAIError": "llmgateway:OpenAIError",
+    "error": {
+      "@id": "llmgateway:error"
+    },
+    "AnthropicError": "llmgateway:AnthropicError",
+    "type": {
+      "@id": "llmgateway:type",
+      "@type": "xsd:string"
+    }
+  },
+  "@type": "schema:Dataset",
+  "schema:name": "LLM Gateway API JSON-LD context",
+  "schema:description": "A JSON-LD @context for the objects LLM Gateway's own API contract declares: one class per component schema, one property per declared field, typed from the contract. Derived by script (derive-json-ld.py, 2026-10-12) from openapi/llmgateway-io-gateway-api-openapi.yml.",
+  "dcterms:created": "2026-10-12",
+  "dcterms:source": [
+    "openapi/llmgateway-io-gateway-api-openapi.yml"
+  ]
+}

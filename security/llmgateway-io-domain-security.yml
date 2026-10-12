@@ -1,0 +1,29 @@
+generated: '2026-10-12'
+method: probed
+source: live DNS/TLS/HTTP probes of apis.yml + OpenAPI hosts
+hosts:
+- host: llmgateway.io
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Dec 25 08:38:48 2026 GMT
+  hsts: true
+  hsts_max_age: 31536000
+- host: docs.llmgateway.io
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Dec 25 08:38:48 2026 GMT
+  hsts: true
+  hsts_max_age: 31536000
+- host: api.llmgateway.io
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Dec 25 08:38:48 2026 GMT
+  hsts: true
+  hsts_max_age: 31536000
+domains:
+- domain: llmgateway.io
+  dnssec: false
+  caa: []
+  spf: false
+  dmarc: true
+  dmarc_policy: none

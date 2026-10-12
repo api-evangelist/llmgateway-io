@@ -1,0 +1,1 @@
+{"resource":"https://api.llmgateway.io/mcp","authorization_servers":["https://api.llmgateway.io"],"scopes_supported":["mcp:tools","mcp:resources","mcp:prompts"],"bearer_methods_supported":["header"],"resource_name":"LLM Gateway MCP server","resource_documentation":"https://llmgateway.io/mcp"}

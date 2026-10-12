@@ -1,0 +1,13 @@
+generated: '2026-10-12'
+method: derived
+source: openapi/llmgateway-io-gateway-api-openapi.yml
+summary:
+  types:
+  - http
+schemes:
+- name: bearerAuth
+  type: http
+  scheme: bearer
+  description: Bearer token authentication using API keys
+  sources:
+  - openapi/llmgateway-io-gateway-api-openapi.yml

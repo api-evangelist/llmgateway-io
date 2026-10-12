@@ -1,0 +1,11 @@
+{
+ "url": "https://api.llmgateway.io/openapi.json",
+ "requested_url": "https://api.llmgateway.io/openapi.json",
+ "status": 200,
+ "content_type": "application/json",
+ "bytes": 164420,
+ "sha256": "d48a43dc3f881a164b6bcb302247fda354320f5eaa89f25627a65d68e37e4cca",
+ "fetched_at": "2026-10-12",
+ "fetched_by": "APIEvangelist-Harvest/1.0 (+https://apievangelist.com)",
+ "note": "Provider-published OpenAPI 3.0.0, saved byte-identical. Also mirrored at https://llmgateway.io/openapi.json."
+}

@@ -1,0 +1,132 @@
+generated: '2026-10-12'
+method: derived
+generator: derive-problem-types.py
+source:
+- openapi/llmgateway-io-gateway-api-openapi.yml
+format: custom
+envelope:
+  media_type: application/json
+  schema: OpenAIError
+coverage:
+  operations: 21
+  statuses_declared: 17
+problems:
+- status: 400
+  title: Bad Request
+  description: Invalid request body or parameters.
+  operations: 19
+  media_types:
+  - application/json
+  schema: OpenAIError
+- status: 401
+  title: Unauthorized
+  description: Missing or invalid API key.
+  operations: 19
+  media_types:
+  - application/json
+  schema: OpenAIError
+- status: 402
+  title: Payment Required
+  description: Insufficient credits or plan limits reached.
+  operations: 19
+  media_types:
+  - application/json
+  schema: OpenAIError
+- status: 403
+  title: Forbidden
+  description: Forbidden request or upstream response.
+  operations: 19
+  media_types:
+  - application/json
+  schema: OpenAIError
+- status: 404
+  title: Not Found
+  description: Unknown model or upstream not-found response.
+  operations: 19
+  media_types:
+  - application/json
+  schema: OpenAIError
+- status: 408
+  title: Request Timeout
+  description: Request timeout.
+  operations: 19
+  media_types:
+  - application/json
+  schema: OpenAIError
+- status: 410
+  title: Gone
+  description: Archived or unavailable project.
+  operations: 19
+  media_types:
+  - application/json
+  schema: OpenAIError
+- status: 413
+  title: Content Too Large
+  description: Request too large.
+  operations: 19
+  media_types:
+  - application/json
+  schema: OpenAIError
+- status: 415
+  title: Unsupported Media Type
+  description: Unsupported media type.
+  operations: 19
+  media_types:
+  - application/json
+  schema: OpenAIError
+- status: 416
+  title: Range Not Satisfiable
+  description: The requested byte range is not satisfiable.
+  operations: 2
+  media_types: []
+  schema: null
+- status: 429
+  title: Too Many Requests
+  description: Rate limited. Response headers describe only LLMGateway-enforced limits; upstream provider headers
+    are not forwarded. Honor Retry-After when
+  operations: 19
+  media_types:
+  - application/json
+  schema: OpenAIError
+- status: 500
+  title: Internal Server Error
+  description: Internal server error.
+  operations: 19
+  media_types:
+  - application/json
+  schema: OpenAIError
+- status: 502
+  title: Bad Gateway
+  description: Failed to connect to the upstream provider.
+  operations: 19
+  media_types:
+  - application/json
+  schema: OpenAIError
+- status: 503
+  title: Service Unavailable
+  description: Service unavailable upstream response.
+  operations: 20
+  media_types:
+  - application/json
+  schema: OpenAIError
+- status: 504
+  title: Gateway Timeout
+  description: Upstream provider timeout.
+  operations: 19
+  media_types:
+  - application/json
+  schema: OpenAIError
+- status: 529
+  title: null
+  description: Gateway overloaded.
+  operations: 19
+  media_types:
+  - application/json
+  schema: OpenAIError
+- status: default
+  title: null
+  description: Authentication, validation, or availability error.
+  operations: 1
+  media_types:
+  - application/json
+  schema: OpenAIError

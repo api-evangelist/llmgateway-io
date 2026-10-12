@@ -1,0 +1,20 @@
+generated: '2026-10-12'
+method: derived
+generator: derive-vocabulary.py
+source: openapi/llmgateway-io-gateway-api-openapi.yml
+vocabulary:
+  name: LLM Gateway Domain Vocabulary
+  description: 'Terms declared by LLM Gateway''s own API contract: its resource groups, objects and enumerations, with the contract''s definitions.
+    Derived, not authored.'
+  version: '2026-10-12'
+  terms:
+  - term: OpenAIError
+    definition: OpenAI-compatible error object.
+    tags:
+    - Object
+    source: openapi/llmgateway-io-gateway-api-openapi.yml#/components/schemas/OpenAIError
+  - term: AnthropicError
+    definition: Anthropic-compatible error object.
+    tags:
+    - Object
+    source: openapi/llmgateway-io-gateway-api-openapi.yml#/components/schemas/AnthropicError
