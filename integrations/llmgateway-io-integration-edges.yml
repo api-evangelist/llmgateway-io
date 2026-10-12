@@ -16,7 +16,25 @@ checked:
 - https://zapier.com/apps/llm-gateway/integrations
 - https://zapier.com/apps/llmgateway-io/integrations
 - https://zapier.com/apps/llmgateway/integrations
+- https://github.com/api-evangelist/llmgateway-io/blob/main/openapi/llmgateway-io-gateway-api-openapi.yml
 summary: null
 marketplace_apps: []
-edges: []
+edges:
+- partner_name: TypeSafe AI
+  partner: typesafe-ai
+  partner_match: domain
+  type: contract
+  channel: provider-built
+  relationship: compatible
+  direction: provider-built
+  evidence: https://github.com/api-evangelist/llmgateway-io/blob/main/openapi/llmgateway-io-gateway-api-openapi.yml#L4445
+  contract_reference:
+    repo: llmgateway-io
+    spec_file: llmgateway-io-gateway-api-openapi.yml
+    value: /v1/systemone
+    property: paths
+    note: 'llmgateway-io declares TypeSafe compatibility: ''TypeSafe-compatible API, serving TypeSafe models only. To be deprecated
+      soon in favor of the OpenAI-compatible /v1/decisions,'''
+    detected_by: frontier-decision-models.py (2026-10-12)
+    detected: '2026-10-12'
 templates: []
