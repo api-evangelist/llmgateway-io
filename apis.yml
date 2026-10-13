@@ -24,6 +24,9 @@ maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 common:
+- type: CapabilityMap
+  url: capabilities/llmgateway-io-capability-edges.yml
+  name: LLM Gateway Business Capability Map
 - type: AgenticAccess
   url: agentic-access/llmgateway-io-agentic-access.yml
 - type: Spectral
