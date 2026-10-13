@@ -155,10 +155,10 @@
   relationship: system-coverage
   status: not-a-workflow
   arazzo: null
-- slug: llmgateway-io-gemini
-  label: gemini
-  partner: gemini
-  partner_name: gemini
+- slug: llmgateway-io-google-gemini
+  label: google-gemini
+  partner: google-gemini
+  partner_name: google-gemini
   type: coverage
   channel: provider-built
   evidence: https://api.llmgateway.io/v1/models
