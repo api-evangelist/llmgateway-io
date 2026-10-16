@@ -381,6 +381,6 @@
     note: 'llmgateway-io declares OpenAI compatibility: ''description: ''OpenAI-compatible LLM gateway: chat completions,
       embeddings, images, audio, video, moderation, OCR, rerank,'''
     detected_by: sweep-model-routing.py
-    detected: '2026-10-13'
+    detected: '2026-10-15'
   status: not-a-workflow
   arazzo: null

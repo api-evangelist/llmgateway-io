@@ -294,11 +294,11 @@ edges:
   - provider
   router_signals:
     provider:
-      models: 26
+      models: 27
       router_ids:
       - google-ai-studio
-      tools_share: 0.54
-      structured_output_share: 0.65
+      tools_share: 0.56
+      structured_output_share: 0.67
   matched_by: verified-token-table
   detected_by: sweep-model-routing.py
   first_seen: '2026-10-13'
@@ -374,11 +374,11 @@ edges:
   - provider
   router_signals:
     provider:
-      models: 16
+      models: 17
       router_ids:
       - xai
-      tools_share: 0.62
-      structured_output_share: 0.62
+      tools_share: 0.65
+      structured_output_share: 0.59
   matched_by: verified-token-table
   detected_by: sweep-model-routing.py
   first_seen: '2026-10-13'
@@ -494,7 +494,7 @@ edges:
   - provider
   router_signals:
     provider:
-      models: 6
+      models: 3
       router_ids:
       - reka-ai
       tools_share: 1.0
@@ -678,7 +678,7 @@ edges:
     note: 'llmgateway-io declares OpenAI compatibility: ''description: ''OpenAI-compatible LLM gateway: chat completions,
       embeddings, images, audio, video, moderation, OCR, rerank,'''
     detected_by: sweep-model-routing.py
-    detected: '2026-10-13'
+    detected: '2026-10-15'
   detected_by: sweep-model-routing.py
   first_seen: '2026-10-13'
 templates: []
