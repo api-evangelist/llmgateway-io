@@ -1,0 +1,136 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: LLM Gateway API
+  description: 'OpenAI-compatible LLM gateway: chat completions, embeddings, images, audio, video, moderation, OCR, rerank, web search and typed decisions across providers with one API key.'
+servers:
+- url: https://api.llmgateway.io
+- url: http://localhost:4001
+tags:
+- name: LLM Gateway API
+paths:
+  /:
+    get:
+      summary: Health check
+      description: Health check endpoint.
+      operationId: health
+      parameters:
+      - schema:
+          type: string
+          description: 'Comma-separated list of health checks to skip. Options: redis, database'
+          example: redis,database
+        required: false
+        name: skip
+        in: query
+      responses:
+        '200':
+          description: Health check response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  version:
+                    type: string
+                  clientIp:
+                    type:
+                    - string
+                    - 'null'
+                  clientIpHeader:
+                    type: string
+                  health:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                      redis:
+                        type: object
+                        properties:
+                          connected:
+                            type: boolean
+                          error:
+                            type: string
+                        required:
+                        - connected
+                      database:
+                        type: object
+                        properties:
+                          connected:
+                            type: boolean
+                          error:
+                            type: string
+                        required:
+                        - connected
+                    required:
+                    - status
+                    - redis
+                    - database
+                required:
+                - message
+                - version
+                - clientIp
+                - clientIpHeader
+                - health
+        '503':
+          description: Service unavailable - Redis or database connection failed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  version:
+                    type: string
+                  clientIp:
+                    type:
+                    - string
+                    - 'null'
+                  clientIpHeader:
+                    type: string
+                  health:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                      redis:
+                        type: object
+                        properties:
+                          connected:
+                            type: boolean
+                          error:
+                            type: string
+                        required:
+                        - connected
+                      database:
+                        type: object
+                        properties:
+                          connected:
+                            type: boolean
+                          error:
+                            type: string
+                        required:
+                        - connected
+                    required:
+                    - status
+                    - redis
+                    - database
+                required:
+                - message
+                - version
+                - clientIp
+                - clientIpHeader
+                - health
+      tags:
+      - LLM Gateway API
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token authentication using API keys
+externalDocs:
+  url: https://docs.llmgateway.io
+  description: LLMGateway Documentation

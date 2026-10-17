@@ -1,0 +1,427 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: LLM Gateway Decisions API
+  description: 'OpenAI-compatible LLM gateway: chat completions, embeddings, images, audio, video, moderation, OCR, rerank, web search and typed decisions across providers with one API key.'
+servers:
+- url: https://api.llmgateway.io
+- url: http://localhost:4001
+tags:
+- name: Decisions
+paths:
+  /v1/decisions:
+    post:
+      operationId: v1_decisions
+      summary: Decisions
+      description: Evaluate text or images against typed questions and get calibrated predicate, choice and score answers back. OpenAI-compatible API.
+      security:
+      - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                model:
+                  type: string
+                  description: ID of the decision model to use, optionally prefixed with a provider (`openai/gpt-6-luna-decisions`, `azure/microsoft-decision-1`, `typesafe/jev-1.13.0`).
+                  example: gpt-6-luna-decisions
+                input:
+                  anyOf:
+                  - type: string
+                  - type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - message
+                        role:
+                          type: string
+                          enum:
+                          - user
+                        content:
+                          anyOf:
+                          - type: string
+                          - type: array
+                            items:
+                              oneOf:
+                              - type: object
+                                properties:
+                                  type:
+                                    type: string
+                                    enum:
+                                    - input_text
+                                  text:
+                                    type: string
+                                required:
+                                - type
+                                - text
+                              - type: object
+                                properties:
+                                  type:
+                                    type: string
+                                    enum:
+                                    - input_image
+                                  image_url:
+                                    type: string
+                                    description: A base64-encoded image in a data URL or a publicly accessible HTTP(S) image URL.
+                                  detail:
+                                    type:
+                                    - string
+                                    - 'null'
+                                    enum:
+                                    - low
+                                    - high
+                                    - auto
+                                    - original
+                                required:
+                                - type
+                                - image_url
+                      required:
+                      - role
+                      - content
+                  description: 'The text or images to evaluate for every question: a string, or user messages with `input_text` and `input_image` parts. Image input depends on the model.'
+                  example: I was charged twice for my order.
+                questions:
+                  type: array
+                  items:
+                    oneOf:
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - predicate
+                        name:
+                          type: string
+                        instructions:
+                          type: string
+                      required:
+                      - type
+                      - instructions
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - choice
+                        name:
+                          type: string
+                        instructions:
+                          type: string
+                        choices:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              value:
+                                anyOf:
+                                - type: string
+                                - type: boolean
+                              description:
+                                type: string
+                            required:
+                            - value
+                          minItems: 2
+                          maxItems: 255
+                          description: 'Between 2 and 255 unique options. Values are typed: a string and a boolean with the same text are distinct.'
+                      required:
+                      - type
+                      - instructions
+                      - choices
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - score
+                        name:
+                          type: string
+                        instructions:
+                          type: string
+                        levels:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              label:
+                                type: string
+                              description:
+                                type: string
+                            required:
+                            - label
+                          minItems: 2
+                          description: Ordered levels, lowest first.
+                      required:
+                      - type
+                      - instructions
+                      - levels
+                    description: 'A typed question: `predicate` (probability a condition is true), `choice` (one option from a set) or `score` (rating across ordered levels).'
+                  minItems: 1
+                  description: Questions to evaluate against the input. Answers come back in the same order, echoing each question's `name`.
+                safety_identifier:
+                  type:
+                  - string
+                  - 'null'
+                  maxLength: 128
+                  description: Opaque identifier for the end user making the request.
+              required:
+              - model
+              - input
+              - questions
+      responses:
+        '200':
+          description: Typed answers for the submitted questions.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  model:
+                    type: string
+                  answers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - predicate
+                          - choice
+                          - score
+                          - refusal
+                        name:
+                          type:
+                          - string
+                          - 'null'
+                        probability:
+                          type: number
+                          description: Probability from 0 to 1 that the condition is true, on a predicate answer.
+                        choice:
+                          anyOf:
+                          - type: string
+                          - type: boolean
+                          description: Highest-probability option, on a choice answer.
+                        score:
+                          type: number
+                          description: Probability-weighted average of the level indices, on a score answer.
+                        probabilities:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              value:
+                                anyOf:
+                                - type: string
+                                - type: boolean
+                                - type: number
+                              label:
+                                type: string
+                              probability:
+                                type: number
+                            required:
+                            - value
+                            - probability
+                        confidence:
+                          type: number
+                      required:
+                      - type
+                  usage:
+                    type: object
+                    properties:
+                      input_tokens:
+                        type: integer
+                      output_tokens:
+                        type: integer
+                      total_tokens:
+                        type: integer
+                    required:
+                    - input_tokens
+                    - output_tokens
+                    - total_tokens
+                required:
+                - model
+                - answers
+                description: One typed answer per question, in question order.
+        '400':
+          description: Invalid request body or parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '402':
+          description: Insufficient credits or plan limits reached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '403':
+          description: Forbidden request or upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '404':
+          description: Unknown model or upstream not-found response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '408':
+          description: Request timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '410':
+          description: Archived or unavailable project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '413':
+          description: Request too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '429':
+          description: Rate limited. Response headers describe only LLMGateway-enforced limits; upstream provider headers are not forwarded. Honor Retry-After when present.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '502':
+          description: Failed to connect to the upstream provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '503':
+          description: Service unavailable upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '504':
+          description: Upstream provider timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '529':
+          description: Gateway overloaded.
+          headers:
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+      tags:
+      - Decisions
+components:
+  schemas:
+    OpenAIError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            type:
+              type: string
+            param:
+              type:
+              - string
+              - 'null'
+            code:
+              type:
+              - string
+              - 'null'
+          required:
+          - message
+          - type
+          - param
+          - code
+      required:
+      - error
+      description: OpenAI-compatible error object.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token authentication using API keys
+externalDocs:
+  url: https://docs.llmgateway.io
+  description: LLMGateway Documentation

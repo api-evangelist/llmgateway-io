@@ -1,0 +1,1213 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: LLM Gateway Chat API
+  description: 'OpenAI-compatible LLM gateway: chat completions, embeddings, images, audio, video, moderation, OCR, rerank, web search and typed decisions across providers with one API key.'
+servers:
+- url: https://api.llmgateway.io
+- url: http://localhost:4001
+tags:
+- name: Chat Completions
+paths:
+  /v1/chat/completions:
+    post:
+      operationId: v1_chat_completions
+      summary: Chat Completions
+      description: Create a completion for the chat conversation
+      security:
+      - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                model:
+                  type: string
+                  example: gpt-5
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      role:
+                        type: string
+                        enum:
+                        - developer
+                        - system
+                        - user
+                        - assistant
+                        - tool
+                        - function
+                        example: user
+                      content:
+                        anyOf:
+                        - type: string
+                          example: Hello!
+                        - type: array
+                          items:
+                            anyOf:
+                            - type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                  - text
+                                text:
+                                  type: string
+                                extra_content:
+                                  type: object
+                                  properties:
+                                    google:
+                                      type: object
+                                      properties:
+                                        thought_signature:
+                                          type: string
+                                cache_control:
+                                  type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                      - ephemeral
+                                    ttl:
+                                      type: string
+                                      enum:
+                                      - 5m
+                                      - 1h
+                                  required:
+                                  - type
+                                prompt_cache_breakpoint:
+                                  type: object
+                                  properties:
+                                    mode:
+                                      type: string
+                                      enum:
+                                      - explicit
+                                  description: OpenAI explicit prompt cache breakpoint marker (GPT-5.6 and later). Ends a cacheable prefix when the request sets prompt_cache_options.mode to 'explicit'. Stripped for providers/models without explicit prompt caching support.
+                              required:
+                              - type
+                              - text
+                            - type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                  - image_url
+                                image_url:
+                                  type: object
+                                  properties:
+                                    url:
+                                      type: string
+                                    detail:
+                                      type: string
+                                      enum:
+                                      - low
+                                      - high
+                                      - auto
+                                  required:
+                                  - url
+                                prompt_cache_breakpoint:
+                                  type: object
+                                  properties:
+                                    mode:
+                                      type: string
+                                      enum:
+                                      - explicit
+                              required:
+                              - type
+                              - image_url
+                            - type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                  - input_audio
+                                input_audio:
+                                  type: object
+                                  properties:
+                                    data:
+                                      type: string
+                                    format:
+                                      type: string
+                                      enum:
+                                      - wav
+                                      - mp3
+                                      - aiff
+                                      - aac
+                                      - ogg
+                                      - flac
+                                      - m4a
+                                      - mpeg
+                                      - mpga
+                                      - mp4
+                                      - pcm
+                                      - webm
+                                  required:
+                                  - data
+                                  - format
+                                prompt_cache_breakpoint:
+                                  type: object
+                                  properties:
+                                    mode:
+                                      type: string
+                                      enum:
+                                      - explicit
+                              required:
+                              - type
+                              - input_audio
+                            - type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                  - file
+                                file:
+                                  type: object
+                                  properties:
+                                    filename:
+                                      type: string
+                                    file_data:
+                                      type: string
+                                      description: Base64-encoded data URL with MIME prefix, e.g. 'data:application/pdf;base64,<data>'.
+                                    file_id:
+                                      type: string
+                                      description: Reference to a file uploaded via the provider's Files API.
+                                prompt_cache_breakpoint:
+                                  type: object
+                                  properties:
+                                    mode:
+                                      type: string
+                                      enum:
+                                      - explicit
+                              required:
+                              - type
+                              - file
+                        - {}
+                      name:
+                        type: string
+                      tool_call_id:
+                        type: string
+                      tool_calls:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            type:
+                              type: string
+                              enum:
+                              - function
+                            extra_content:
+                              type: object
+                              properties:
+                                google:
+                                  type: object
+                                  properties:
+                                    thought_signature:
+                                      type: string
+                            function:
+                              type: object
+                              properties:
+                                name:
+                                  type: string
+                                arguments:
+                                  type: string
+                              required:
+                              - name
+                              - arguments
+                          required:
+                          - id
+                          - type
+                          - function
+                        description: A list of tool calls generated by the model in this message.
+                        example:
+                        - id: call_abc123
+                          type: function
+                          function:
+                            name: get_current_weather
+                            arguments: '{"location": "Boston, MA"}'
+                      reasoning:
+                        type: string
+                      reasoning_content:
+                        type: string
+                      reasoning_details:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            text:
+                              type: string
+                            type:
+                              type: string
+                      phase:
+                        type: string
+                        enum:
+                        - commentary
+                        - final_answer
+                        description: OpenAI Responses assistant-message phase. Replayed upstream for OpenAI Responses API models; stripped for other providers.
+                      content_before_tool_calls:
+                        type: boolean
+                        description: Marks assistant content that preceded the message's tool calls (pre-tool commentary on OpenAI Responses API models), so replay preserves the original item order. Stripped for other providers.
+                      message_items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            text:
+                              type: string
+                            phase:
+                              type: string
+                              enum:
+                              - commentary
+                              - final_answer
+                            preceding_tool_calls:
+                              type: integer
+                              minimum: 0
+                          required:
+                          - text
+                        description: Separate phased assistant message items (e.g. commentary and final_answer) emitted by OpenAI Responses API models in a single turn. preceding_tool_calls records how many of the message's tool calls came before each item. Replayed upstream as individual message items in their original order; stripped for other providers.
+                      anthropic_native_blocks:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                          required:
+                          - type
+                        description: Anthropic content blocks with no OpenAI-format equivalent. On an assistant message these are the server-side tool search blocks (`server_tool_use` + `tool_search_tool_result`), replayed ahead of the message's tool calls; on a tool message they are the `tool_result` content array, which is how a client-side tool search returns `tool_reference` blocks. Replayed on the Anthropic Messages API only and stripped for every other provider.
+                      tool_result_cache_control:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                            enum:
+                            - ephemeral
+                          ttl:
+                            type: string
+                            enum:
+                            - 5m
+                            - 1h
+                        required:
+                        - type
+                        description: Prompt-cache breakpoint for the Anthropic `tool_result` block this tool message becomes. The OpenAI tool message shape has nowhere to carry it, so it rides here. Applied on the Anthropic Messages API only and stripped for every other provider.
+                    required:
+                    - role
+                temperature:
+                  type:
+                  - number
+                  - 'null'
+                  example: 0.7
+                max_tokens:
+                  type:
+                  - number
+                  - 'null'
+                  example: 1000
+                top_p:
+                  type:
+                  - number
+                  - 'null'
+                  example: 0.9
+                frequency_penalty:
+                  type:
+                  - number
+                  - 'null'
+                  example: 0
+                presence_penalty:
+                  type:
+                  - number
+                  - 'null'
+                  example: 0
+                response_format:
+                  anyOf:
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                        - text
+                        - json_object
+                        example: json_object
+                    required:
+                    - type
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                        - json_schema
+                      json_schema:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          description:
+                            type: string
+                          schema:
+                            type: object
+                            additionalProperties: {}
+                          strict:
+                            type: boolean
+                        required:
+                        - name
+                        - schema
+                    required:
+                    - type
+                    - json_schema
+                stream:
+                  type: boolean
+                  default: false
+                n:
+                  type:
+                  - integer
+                  - 'null'
+                  minimum: 1
+                  maximum: 128
+                  description: 'How many chat completion choices to generate for each input message. Only accepted when the resolved model supports it upstream (currently OpenAI Chat Completions models and Google Gemini 2.5 models via `candidateCount`); requests for unsupported models are rejected with 400. Streaming is supported for OpenAI models: choice deltas are demultiplexed by `choices[].index` on a single SSE stream. Exceptions rejected with 400: `n > 1` with `stream: true` **and** function `tools` (the streaming tool-call aggregator can''t disambiguate concurrent calls across choices; native `web_search` tools and the `web_search: true` flag are exempt), `n > 1` with `stream: true` on Google models (Gemini rejects candidateCount on streamGenerateContent), and `n > 8` on Google models (Gemini caps candidateCount at 8).'
+                  example: 1
+                prompt:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    version:
+                      type: integer
+                      minimum: 1
+                    label:
+                      type: string
+                    variables:
+                      type: object
+                      additionalProperties:
+                        anyOf:
+                        - type: string
+                        - type: number
+                        - type: boolean
+                  required:
+                  - id
+                  description: Managed prompt to expand before routing, by id or name. Its rendered messages are prepended to `messages`, and its model and parameters fill fields you leave unset. Pin a `version`, or pick a `label` (`production` by default; `latest` is the newest version). A prompt without variables can also be referenced through `model` as `@prompt/<name>`, `@prompt/<name>@<label>` or `@prompt/<name>@<version>`.
+                  example:
+                    id: support-reply
+                    variables:
+                      customer: Ada
+                prompt_cache_key:
+                  type:
+                  - string
+                  - 'null'
+                  description: OpenAI prompt caching key used to improve cache routing for requests with shared prompt prefixes.
+                  example: tenant-123
+                prompt_cache_retention:
+                  type:
+                  - string
+                  - 'null'
+                  enum:
+                  - in_memory
+                  - 24h
+                  description: OpenAI prompt cache retention policy. OpenAI supports in_memory and 24h for eligible models.
+                  example: 24h
+                prompt_cache_options:
+                  type:
+                  - object
+                  - 'null'
+                  properties:
+                    mode:
+                      type: string
+                      enum:
+                      - implicit
+                      - explicit
+                    ttl:
+                      type: string
+                      enum:
+                      - 30m
+                  description: OpenAI explicit prompt caching options (GPT-5.6 and later). mode 'implicit' (default) places an automatic cache breakpoint at the latest message; 'explicit' caches only content parts marked with prompt_cache_breakpoint. Only forwarded for OpenAI models that support explicit prompt caching.
+                  example:
+                    mode: explicit
+                user:
+                  type:
+                  - string
+                  - 'null'
+                  description: OpenAI end-user identifier. Used as a fallback sticky-routing session key when no x-session-id header or prompt_cache_key is provided.
+                  example: user-123
+                tools:
+                  type: array
+                  items:
+                    anyOf:
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - function
+                        function:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            description:
+                              type: string
+                            parameters:
+                              type: object
+                              additionalProperties: {}
+                          required:
+                          - name
+                        defer_loading:
+                          type: boolean
+                          description: Anthropic only. Keeps the tool out of the rendered tools section so it never enters the cached prompt prefix, and loads it on demand once the tool search tool discovers it. Requires a `tool_search` tool in `tools`, and Anthropic rejects a request whose tools are all deferred. Stripped for every other provider, which receives the tool eagerly instead.
+                        cache_control:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                              - ephemeral
+                            ttl:
+                              type: string
+                              enum:
+                              - 5m
+                              - 1h
+                          required:
+                          - type
+                          description: Anthropic only. Cache breakpoint ending the tool-definitions prefix, which Anthropic renders before the system prompt and messages. Placed on the last tool it caches every tool up to and including that one, and counts toward Anthropic's limit of 4 breakpoints per request. Stripped for every other provider.
+                      required:
+                      - type
+                      - function
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - tool_search
+                        tool_search_type:
+                          type: string
+                          pattern: ^tool_search_tool
+                          description: Anthropic tool search tool type, e.g. `tool_search_tool_regex_20251119` or `tool_search_tool_bm25_20251119`.
+                        name:
+                          type: string
+                      required:
+                      - type
+                      - tool_search_type
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - web_search
+                        user_location:
+                          type: object
+                          properties:
+                            city:
+                              type: string
+                            region:
+                              type: string
+                            country:
+                              type: string
+                            timezone:
+                              type: string
+                        search_context_size:
+                          type: string
+                          enum:
+                          - low
+                          - medium
+                          - high
+                        max_uses:
+                          type: number
+                        allowed_domains:
+                          type: array
+                          items:
+                            type: string
+                        blocked_domains:
+                          type: array
+                          items:
+                            type: string
+                      required:
+                      - type
+                tool_choice:
+                  anyOf:
+                  - type: string
+                    enum:
+                    - auto
+                  - type: string
+                    enum:
+                    - none
+                  - type: string
+                    enum:
+                    - required
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                        - function
+                      function:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                        required:
+                        - name
+                    required:
+                    - type
+                    - function
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                        - web_search
+                    required:
+                    - type
+                  description: 'Controls which tool the model calls. `{"type": "web_search"}` demands a search instead of offering one, and requires a `web_search` tool in `tools`. Providers whose web search is model-elected are unaffected by it — the model already decides — but it is the only way to reach providers that can search solely on demand (currently Alibaba''s DashScope and its resellers), which are otherwise skipped when routing a web search request.'
+                reasoning_effort:
+                  type:
+                  - string
+                  - 'null'
+                  enum:
+                  - none
+                  - minimal
+                  - low
+                  - medium
+                  - high
+                  - xhigh
+                  - max
+                  description: 'Controls the reasoning effort for reasoning-capable models. `none` is only supported by OpenAI''s newer reasoning models (e.g. gpt-5.4 and later); for other providers it disables reasoning. `max` is the highest tier (above `xhigh`), supported by Anthropic models and OpenAI GPT-5.6 models. The gateway never downgrades effort tiers: providers that accept an effort parameter receive the value unchanged (an unsupported value results in a provider error), while providers that take a thinking budget instead (e.g. Anthropic, Google) translate each tier to a native budget. The exact values each provider mapping accepts are exposed as `reasoning_efforts` on `/v1/models`.'
+                  example: medium
+                reasoning:
+                  type: object
+                  properties:
+                    effort:
+                      type: string
+                      enum:
+                      - none
+                      - minimal
+                      - low
+                      - medium
+                      - high
+                      - xhigh
+                      - max
+                      description: 'Controls the reasoning effort. Alternative to top-level reasoning_effort. Cannot be used together with reasoning_effort. `max` is the highest tier (above `xhigh`), supported by Anthropic models and OpenAI GPT-5.6 models. Tiers are never downgraded by the gateway: enum-based providers receive the value unchanged (unsupported values result in a provider error), while budget-based providers (e.g. Anthropic, Google) translate the tier to a native thinking budget. See `reasoning_efforts` on `/v1/models` for the values each mapping accepts.'
+                      example: medium
+                    max_tokens:
+                      type: integer
+                      description: Exact number of tokens to allocate for reasoning. When specified, overrides effort. Supported by Anthropic and Google thinking models.
+                      example: 4000
+                      exclusiveMinimum: 0
+                    context:
+                      type: string
+                      enum:
+                      - auto
+                      - current_turn
+                      - all_turns
+                      description: How much replayed reasoning the model considers (OpenAI Responses API models only). Omitting the field is equivalent to 'auto'. Forwarded upstream as reasoning.context; ignored by other providers.
+                      example: current_turn
+                    mode:
+                      type: string
+                      enum:
+                      - standard
+                      - pro
+                      description: 'Execution strategy: `pro` performs additional model work for difficult tasks at higher latency and token usage. Independent of effort, which controls how much reasoning happens within the mode. Only accepted by mappings that list it under `reasoning_modes` on `/v1/models` (OpenAI GPT-5.6 models); the request is rejected for any other model instead of the field being dropped.'
+                      example: pro
+                  description: Unified reasoning configuration object for controlling reasoning behavior
+                effort:
+                  type:
+                  - string
+                  - 'null'
+                  enum:
+                  - low
+                  - medium
+                  - high
+                  description: Controls the computational effort for supported models (currently only claude-opus-4-5-20251101)
+                  example: medium
+                verbosity:
+                  type:
+                  - string
+                  - 'null'
+                  enum:
+                  - low
+                  - medium
+                  - high
+                  description: Controls how detailed the model's responses are. Only supported by OpenAI GPT-5 and later models; requests to models without verbosity support return a 400 error.
+                  example: low
+                service_tier:
+                  type: string
+                  enum:
+                  - auto
+                  - default
+                  - flex
+                  - priority
+                  description: Processing tier for the request. `flex` and `priority` are forwarded only for provider/model mappings that explicitly support the requested tier, such as supported OpenAI and Google mappings. `auto`/`default` use the standard on-demand tier. Unsupported tier requests return a 400 `unsupported_service_tier` error. On coding (dev) plans only `auto`, `default` and `flex` are allowed.
+                  example: flex
+                anthropic_safeguards:
+                  type: object
+                  properties:
+                    safeguards:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                        required:
+                        - type
+                      minItems: 1
+                    betas:
+                      type: array
+                      items:
+                        type: string
+                      minItems: 1
+                  required:
+                  - safeguards
+                  - betas
+                  description: 'Anthropic server-side safeguard review (Claude Code auto mode): the Messages API `safeguards` field and its paired beta values. Valid pairs restrict routing and fallback to compatible providers; unsupported provider pins return 400. Verdicts are returned as `anthropic_safeguard_results` on the assistant message.'
+                routing:
+                  type: string
+                  enum:
+                  - auto
+                  - price
+                  - throughput
+                  - latency
+                  description: Provider selection strategy for model-id routing, named after the factor it optimizes. `auto` (default) uses the full weighted smart-routing score. `price`, `throughput`, and `latency` each give a 90% relative weight to that factor while keeping a small uptime weight so requests still fall back to other providers when the top pick has extremely bad uptime. `latency` only biases streaming requests. Combining `routing` with a specific provider prefix (e.g. `openai/gpt-4o`) returns a 400. On coding (dev) plans only `auto` and `price` are allowed.
+                  example: price
+                free_models_only:
+                  type: boolean
+                  default: false
+                  description: When used with auto routing, only route to free models (models with zero input and output pricing)
+                  example: false
+                onboarding:
+                  type: boolean
+                  default: false
+                  description: Deprecated and ignored. This once skipped email verification for free model usage, but the flag is client-supplied, so any account could assert it. Onboarding is now recognized server-side by the API proxy; setting this grants nothing.
+                  deprecated: true
+                  example: false
+                no_reasoning:
+                  type: boolean
+                  default: false
+                  description: When used with auto routing, exclude reasoning models from selection
+                  example: false
+                sensitive_word_check:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      enum:
+                      - DISABLE
+                      - ENABLE
+                  required:
+                  - status
+                image_config:
+                  type: object
+                  properties:
+                    aspect_ratio:
+                      type: string
+                    image_size:
+                      type: string
+                    image_quality:
+                      type: string
+                      enum:
+                      - low
+                      - medium
+                      - high
+                      - xhigh
+                      - max
+                      - auto
+                    moderation:
+                      type: string
+                      enum:
+                      - auto
+                      - low
+                    n:
+                      type: number
+                    seed:
+                      type: number
+                web_search:
+                  type: boolean
+                  default: false
+                  description: Enable native web search for models that support it. When enabled, the model can search the web for real-time information.
+                  example: true
+                plugins:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        enum:
+                        - response-healing
+                        description: Plugin identifier
+                        example: response-healing
+                    required:
+                    - id
+                  description: 'Plugins to enable for this request. Currently supported: response-healing (automatically repairs malformed JSON responses when using response_format)'
+                  example:
+                  - id: response-healing
+      responses:
+        '200':
+          description: User response object or streaming response.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  object:
+                    type: string
+                  created:
+                    type: number
+                  model:
+                    type: string
+                  choices:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        index:
+                          type: number
+                        message:
+                          type: object
+                          properties:
+                            role:
+                              type: string
+                            content:
+                              type:
+                              - string
+                              - 'null'
+                            reasoning:
+                              type:
+                              - string
+                              - 'null'
+                            tool_calls:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id:
+                                    type: string
+                                  type:
+                                    type: string
+                                    enum:
+                                    - function
+                                  function:
+                                    type: object
+                                    properties:
+                                      name:
+                                        type: string
+                                      arguments:
+                                        type: string
+                                    required:
+                                    - name
+                                    - arguments
+                                required:
+                                - id
+                                - type
+                                - function
+                            images:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  type:
+                                    type: string
+                                    enum:
+                                    - image_url
+                                  image_url:
+                                    type: object
+                                    properties:
+                                      url:
+                                        type: string
+                                    required:
+                                    - url
+                                required:
+                                - type
+                                - image_url
+                          required:
+                          - role
+                          - content
+                        finish_reason:
+                          type: string
+                      required:
+                      - index
+                      - message
+                      - finish_reason
+                  usage:
+                    type: object
+                    properties:
+                      prompt_tokens:
+                        type: number
+                      completion_tokens:
+                        type: number
+                      total_tokens:
+                        type: number
+                      reasoning_tokens:
+                        type: number
+                      prompt_tokens_details:
+                        type: object
+                        properties:
+                          cached_tokens:
+                            type: number
+                          cache_write_tokens:
+                            type: number
+                          cache_creation_tokens:
+                            type: number
+                          cache_creation:
+                            type: object
+                            properties:
+                              ephemeral_5m_input_tokens:
+                                type: number
+                              ephemeral_1h_input_tokens:
+                                type: number
+                            required:
+                            - ephemeral_5m_input_tokens
+                            - ephemeral_1h_input_tokens
+                          audio_tokens:
+                            type: number
+                          video_tokens:
+                            type: number
+                        required:
+                        - cached_tokens
+                      completion_tokens_details:
+                        type: object
+                        properties:
+                          reasoning_tokens:
+                            type: number
+                          image_tokens:
+                            type: number
+                          audio_tokens:
+                            type: number
+                      cost:
+                        type:
+                        - number
+                        - 'null'
+                      cost_details:
+                        type: object
+                        properties:
+                          upstream_inference_cost:
+                            type: number
+                          upstream_inference_prompt_cost:
+                            type: number
+                          upstream_inference_completions_cost:
+                            type: number
+                          total_cost:
+                            type:
+                            - number
+                            - 'null'
+                          input_cost:
+                            type:
+                            - number
+                            - 'null'
+                          output_cost:
+                            type:
+                            - number
+                            - 'null'
+                          cached_input_cost:
+                            type:
+                            - number
+                            - 'null'
+                          cache_write_input_cost:
+                            type:
+                            - number
+                            - 'null'
+                          request_cost:
+                            type:
+                            - number
+                            - 'null'
+                          web_search_cost:
+                            type:
+                            - number
+                            - 'null'
+                          image_input_cost:
+                            type:
+                            - number
+                            - 'null'
+                          image_output_cost:
+                            type:
+                            - number
+                            - 'null'
+                          audio_input_cost:
+                            type:
+                            - number
+                            - 'null'
+                          data_storage_cost:
+                            type:
+                            - number
+                            - 'null'
+                        required:
+                        - upstream_inference_cost
+                        - upstream_inference_prompt_cost
+                        - upstream_inference_completions_cost
+                      info:
+                        type: string
+                    required:
+                    - prompt_tokens
+                    - completion_tokens
+                    - total_tokens
+                  metadata:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                      requested_model:
+                        type: string
+                      requested_provider:
+                        type:
+                        - string
+                        - 'null'
+                      used_model:
+                        type: string
+                      used_provider:
+                        type: string
+                      used_region:
+                        type:
+                        - string
+                        - 'null'
+                      underlying_used_model:
+                        type: string
+                      log_id:
+                        type: string
+                      organization_id:
+                        type: string
+                      project_id:
+                        type: string
+                      discount:
+                        type:
+                        - number
+                        - 'null'
+                      cached:
+                        type: boolean
+                        description: True when the response was replayed from the gateway response cache instead of being generated upstream. Omitted otherwise.
+                      routing:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            provider:
+                              type: string
+                            model:
+                              type: string
+                            region:
+                              type: string
+                            status_code:
+                              type: number
+                            error_type:
+                              type: string
+                            succeeded:
+                              type: boolean
+                            apiKeyHash:
+                              type: string
+                              description: Stable fingerprint of the provider credential this attempt was sent with. Use it together with credentialSource to tell attempts apart when a request rotated keys.
+                            credentialSource:
+                              type: string
+                              enum:
+                              - byok
+                              - platform
+                              description: Whose provider credential served this attempt. `byok` is your organization's own provider key — the provider bills you directly and no credits are deducted. `platform` is an LLM Gateway credential, billed as credits. A hybrid-mode request whose own key fails falls back to `platform`, so both values can appear in one response.
+                            providerKeyId:
+                              type: string
+                              description: Id of your provider key that served this attempt. Set only when credentialSource is `byok`.
+                            providerKeyLabel:
+                              type: string
+                              description: Your provider key as it is named on the provider-keys page (its name, or its masked token when unnamed), so an attempt can be tied to a key without decoding the fingerprint. Set only when credentialSource is `byok`; LLM Gateway's own credentials are never described.
+                            logId:
+                              type: string
+                          required:
+                          - provider
+                          - model
+                          - status_code
+                          - error_type
+                          - succeeded
+                    required:
+                    - request_id
+                    - requested_model
+                    - requested_provider
+                    - used_model
+                    - used_provider
+                    - underlying_used_model
+                required:
+                - id
+                - object
+                - created
+                - model
+                - choices
+                - usage
+                - metadata
+            text/event-stream:
+              schema: {}
+        '400':
+          description: Invalid request body or parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '402':
+          description: Insufficient credits or plan limits reached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '403':
+          description: Forbidden request or upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '404':
+          description: Unknown model or upstream not-found response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '408':
+          description: Request timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '410':
+          description: Archived or unavailable project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '413':
+          description: Request too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '429':
+          description: Rate limited. Response headers describe only LLMGateway-enforced limits; upstream provider headers are not forwarded. Honor Retry-After when present.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '502':
+          description: Failed to connect to the upstream provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '503':
+          description: Service unavailable upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '504':
+          description: Upstream provider timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '529':
+          description: Gateway overloaded.
+          headers:
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+      tags:
+      - Chat Completions
+components:
+  schemas:
+    OpenAIError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            type:
+              type: string
+            param:
+              type:
+              - string
+              - 'null'
+            code:
+              type:
+              - string
+              - 'null'
+          required:
+          - message
+          - type
+          - param
+          - code
+      required:
+      - error
+      description: OpenAI-compatible error object.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token authentication using API keys
+externalDocs:
+  url: https://docs.llmgateway.io
+  description: LLMGateway Documentation

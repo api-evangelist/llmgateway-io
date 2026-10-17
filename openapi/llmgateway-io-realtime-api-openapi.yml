@@ -1,0 +1,216 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: LLM Gateway Realtime API
+  description: 'OpenAI-compatible LLM gateway: chat completions, embeddings, images, audio, video, moderation, OCR, rerank, web search and typed decisions across providers with one API key.'
+servers:
+- url: https://api.llmgateway.io
+- url: http://localhost:4001
+tags:
+- name: Realtime
+paths:
+  /v1/realtime/client_secrets:
+    post:
+      operationId: v1_realtime_client_secrets
+      tags:
+      - Realtime
+      summary: Create a realtime client secret
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                expires_after:
+                  type: object
+                  properties:
+                    anchor:
+                      type: string
+                      enum:
+                      - created_at
+                    seconds:
+                      type: integer
+                  additionalProperties: false
+                session:
+                  oneOf:
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                        - realtime
+                      model:
+                        type: string
+                        minLength: 1
+                      instructions:
+                        type: string
+                        minLength: 1
+                      audio:
+                        type: object
+                        properties:
+                          input:
+                            type: object
+                            properties:
+                              transcription:
+                                type:
+                                - object
+                                - 'null'
+                                properties:
+                                  model:
+                                    type: string
+                                    minLength: 1
+                                required:
+                                - model
+                                additionalProperties: false
+                            additionalProperties: false
+                          output:
+                            type: object
+                            properties:
+                              voice:
+                                type: string
+                                minLength: 1
+                            additionalProperties: false
+                        additionalProperties: false
+                    required:
+                    - type
+                    - model
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                        - transcription
+                      audio:
+                        type: object
+                        properties:
+                          input:
+                            type: object
+                            properties:
+                              transcription:
+                                type: object
+                                properties:
+                                  model:
+                                    type: string
+                                    minLength: 1
+                                required:
+                                - model
+                                additionalProperties: false
+                            required:
+                            - transcription
+                            additionalProperties: false
+                        required:
+                        - input
+                        additionalProperties: false
+                    required:
+                    - type
+                    - audio
+                    additionalProperties: false
+              required:
+              - session
+              additionalProperties: false
+      responses:
+        '200':
+          description: Short-lived secret for a realtime WebSocket session.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: string
+                  expires_at:
+                    type: number
+                  session:
+                    oneOf:
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - realtime
+                        model:
+                          type: string
+                      required:
+                      - type
+                      - model
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - transcription
+                        audio:
+                          type: object
+                          properties:
+                            input:
+                              type: object
+                              properties:
+                                transcription:
+                                  type: object
+                                  properties:
+                                    model:
+                                      type: string
+                                      minLength: 1
+                                  required:
+                                  - model
+                                  additionalProperties: false
+                              required:
+                              - transcription
+                              additionalProperties: false
+                          required:
+                          - input
+                          additionalProperties: false
+                      required:
+                      - type
+                      - audio
+                      additionalProperties: false
+                required:
+                - value
+                - expires_at
+                - session
+        default:
+          description: Authentication, validation, or availability error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+components:
+  schemas:
+    OpenAIError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            type:
+              type: string
+            param:
+              type:
+              - string
+              - 'null'
+            code:
+              type:
+              - string
+              - 'null'
+          required:
+          - message
+          - type
+          - param
+          - code
+      required:
+      - error
+      description: OpenAI-compatible error object.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token authentication using API keys
+externalDocs:
+  url: https://docs.llmgateway.io
+  description: LLMGateway Documentation

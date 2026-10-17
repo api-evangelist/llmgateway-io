@@ -84,58 +84,11 @@ common:
 - type: GitHubRepository
   url: https://github.com/theopenco/llmgateway
 apis:
-- aid: llmgateway-io:llm-gateway-api
-  name: LLM Gateway API
-  description: OpenAI-compatible gateway API (21 paths in the published contract) covering /v1/chat/completions, /v1/messages,
-    /v1/embeddings, /v1/images, /v1/audio, /v1/videos, /v1/moderations, /v1/ocr, /v1/rerank, /v1/search, /v1/models, /v1/key,
-    /v1/decisions and /v1/systemone.
-  humanURL: https://docs.llmgateway.io
-  baseURL: https://api.llmgateway.io
-  tags:
-  - LLM Gateway
-  - Inference
-  properties:
-  - type: OpenAPI
-    url: openapi/llmgateway-io-gateway-api-openapi.yml
-  - type: OpenAPI
-    name: OpenAPI (provider-hosted)
-    url: https://api.llmgateway.io/openapi.json
-  - type: Documentation
-    url: https://docs.llmgateway.io
-  - type: LLMsTxt
-    url: https://docs.llmgateway.io/llms.txt
-- aid: llmgateway-io:decisions
-  name: LLM Gateway Decisions API
-  description: POST /v1/decisions — typed, probabilistic decisions instead of generated text, OpenAI-compatible. Present in
-    the published OpenAPI contract.
-  humanURL: https://docs.llmgateway.io/features/decisions
-  baseURL: https://api.llmgateway.io/v1/decisions
-  tags:
-  - Decision Support
-  - Structured Outputs
-  properties:
-  - type: OpenAPI
-    url: openapi/llmgateway-io-gateway-api-openapi.yml
-  - type: Documentation
-    url: https://docs.llmgateway.io/v1_decisions
-- aid: llmgateway-io:systemone
-  name: LLM Gateway System One API (legacy)
-  description: POST /v1/systemone — TypeSafe System One-compatible endpoint. The docs label it legacy, "to be deprecated soon
-    in favor of the OpenAI-compatible /v1/decisions"; the published contract does not (yet) mark it deprecated. Present in
-    the published OpenAPI contract.
-  humanURL: https://docs.llmgateway.io/features/system-one
-  baseURL: https://api.llmgateway.io/v1/systemone
-  tags:
-  - Decision Support
-  properties:
-  - type: OpenAPI
-    url: openapi/llmgateway-io-gateway-api-openapi.yml
-  - type: Documentation
-    url: https://docs.llmgateway.io/v1_systemone
 - aid: llmgateway-io:mcp
   name: LLM Gateway MCP Server
-  description: Model Context Protocol server (Streamable HTTP) at /mcp, as stated in the OpenAPI info.description; not probed
-    further.
+  description: >-
+    Model Context Protocol server (Streamable HTTP) at /mcp, as stated in the OpenAPI info.description;
+    not probed further.
   humanURL: https://docs.llmgateway.io
   baseURL: https://api.llmgateway.io/mcp
   tags:
@@ -143,3 +96,291 @@ apis:
   properties:
   - type: MCPServer
     url: https://api.llmgateway.io/mcp
+- aid: llmgateway-io:llmgateway-io-audio-api
+  name: LLM Gateway Audio API
+  description: The Audio API from LLM Gateway — 2 operation(s) for audio.
+  humanURL: https://docs.llmgateway.io
+  baseURL: https://api.llmgateway.io
+  tags:
+  - Audio
+  properties:
+  - type: OpenAPI
+    url: openapi/llmgateway-io-audio-api-openapi.yml
+  - type: Documentation
+    url: https://docs.llmgateway.io
+  - type: LLMsTxt
+    url: https://docs.llmgateway.io/llms.txt
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_decisions
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_systemone
+- aid: llmgateway-io:llmgateway-io-decisions-api
+  name: LLM Gateway Decisions API
+  description: The Decisions API from LLM Gateway — 1 operation(s) for decisions.
+  humanURL: https://docs.llmgateway.io
+  baseURL: https://api.llmgateway.io
+  tags:
+  - Decisions
+  properties:
+  - type: OpenAPI
+    url: openapi/llmgateway-io-decisions-api-openapi.yml
+  - type: Documentation
+    url: https://docs.llmgateway.io
+  - type: LLMsTxt
+    url: https://docs.llmgateway.io/llms.txt
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_decisions
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_systemone
+- aid: llmgateway-io:llmgateway-io-embeddings-api
+  name: LLM Gateway Embeddings API
+  description: The Embeddings API from LLM Gateway — 1 operation(s) for embeddings.
+  humanURL: https://docs.llmgateway.io
+  baseURL: https://api.llmgateway.io
+  tags:
+  - Embeddings
+  properties:
+  - type: OpenAPI
+    url: openapi/llmgateway-io-embeddings-api-openapi.yml
+  - type: Documentation
+    url: https://docs.llmgateway.io
+  - type: LLMsTxt
+    url: https://docs.llmgateway.io/llms.txt
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_decisions
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_systemone
+- aid: llmgateway-io:llmgateway-io-images-api
+  name: LLM Gateway Images API
+  description: The Images API from LLM Gateway — 2 operation(s) for images.
+  humanURL: https://docs.llmgateway.io
+  baseURL: https://api.llmgateway.io
+  tags:
+  - Images
+  properties:
+  - type: OpenAPI
+    url: openapi/llmgateway-io-images-api-openapi.yml
+  - type: Documentation
+    url: https://docs.llmgateway.io
+  - type: LLMsTxt
+    url: https://docs.llmgateway.io/llms.txt
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_decisions
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_systemone
+- aid: llmgateway-io:llmgateway-io-key-api
+  name: LLM Gateway Key API
+  description: The Key API from LLM Gateway — 1 operation(s) for key.
+  humanURL: https://docs.llmgateway.io
+  baseURL: https://api.llmgateway.io
+  tags:
+  - Key
+  properties:
+  - type: OpenAPI
+    url: openapi/llmgateway-io-key-api-openapi.yml
+  - type: Documentation
+    url: https://docs.llmgateway.io
+  - type: LLMsTxt
+    url: https://docs.llmgateway.io/llms.txt
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_decisions
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_systemone
+- aid: llmgateway-io:llmgateway-io-llm-gateway-api-api
+  name: LLM Gateway LLM Gateway API
+  description: The LLM Gateway API API from LLM Gateway — 1 operation(s) for llm gateway api.
+  humanURL: https://docs.llmgateway.io
+  baseURL: https://api.llmgateway.io
+  tags:
+  - LLM Gateway API
+  properties:
+  - type: OpenAPI
+    url: openapi/llmgateway-io-llm-gateway-api-api-openapi.yml
+  - type: Documentation
+    url: https://docs.llmgateway.io
+  - type: LLMsTxt
+    url: https://docs.llmgateway.io/llms.txt
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_decisions
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_systemone
+- aid: llmgateway-io:llmgateway-io-messages-api
+  name: LLM Gateway Messages API
+  description: The Messages API from LLM Gateway — 1 operation(s) for messages.
+  humanURL: https://docs.llmgateway.io
+  baseURL: https://api.llmgateway.io
+  tags:
+  - Messages
+  properties:
+  - type: OpenAPI
+    url: openapi/llmgateway-io-messages-api-openapi.yml
+  - type: Documentation
+    url: https://docs.llmgateway.io
+  - type: LLMsTxt
+    url: https://docs.llmgateway.io/llms.txt
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_decisions
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_systemone
+- aid: llmgateway-io:llmgateway-io-models-api
+  name: LLM Gateway Models API
+  description: The Models API from LLM Gateway — 1 operation(s) for models.
+  humanURL: https://docs.llmgateway.io
+  baseURL: https://api.llmgateway.io
+  tags:
+  - Models
+  properties:
+  - type: OpenAPI
+    url: openapi/llmgateway-io-models-api-openapi.yml
+  - type: Documentation
+    url: https://docs.llmgateway.io
+  - type: LLMsTxt
+    url: https://docs.llmgateway.io/llms.txt
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_decisions
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_systemone
+- aid: llmgateway-io:llmgateway-io-moderations-api
+  name: LLM Gateway Moderations API
+  description: The Moderations API from LLM Gateway — 1 operation(s) for moderations.
+  humanURL: https://docs.llmgateway.io
+  baseURL: https://api.llmgateway.io
+  tags:
+  - Moderations
+  properties:
+  - type: OpenAPI
+    url: openapi/llmgateway-io-moderations-api-openapi.yml
+  - type: Documentation
+    url: https://docs.llmgateway.io
+  - type: LLMsTxt
+    url: https://docs.llmgateway.io/llms.txt
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_decisions
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_systemone
+- aid: llmgateway-io:llmgateway-io-ocr-api
+  name: LLM Gateway Ocr API
+  description: The Ocr API from LLM Gateway — 1 operation(s) for ocr.
+  humanURL: https://docs.llmgateway.io
+  baseURL: https://api.llmgateway.io
+  tags:
+  - Ocr
+  properties:
+  - type: OpenAPI
+    url: openapi/llmgateway-io-ocr-api-openapi.yml
+  - type: Documentation
+    url: https://docs.llmgateway.io
+  - type: LLMsTxt
+    url: https://docs.llmgateway.io/llms.txt
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_decisions
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_systemone
+- aid: llmgateway-io:llmgateway-io-realtime-api
+  name: LLM Gateway Realtime API
+  description: The Realtime API from LLM Gateway — 1 operation(s) for realtime.
+  humanURL: https://docs.llmgateway.io
+  baseURL: https://api.llmgateway.io
+  tags:
+  - Realtime
+  properties:
+  - type: OpenAPI
+    url: openapi/llmgateway-io-realtime-api-openapi.yml
+  - type: Documentation
+    url: https://docs.llmgateway.io
+  - type: LLMsTxt
+    url: https://docs.llmgateway.io/llms.txt
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_decisions
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_systemone
+- aid: llmgateway-io:llmgateway-io-rerank-api
+  name: LLM Gateway Rerank API
+  description: The Rerank API from LLM Gateway — 1 operation(s) for rerank.
+  humanURL: https://docs.llmgateway.io
+  baseURL: https://api.llmgateway.io
+  tags:
+  - Rerank
+  properties:
+  - type: OpenAPI
+    url: openapi/llmgateway-io-rerank-api-openapi.yml
+  - type: Documentation
+    url: https://docs.llmgateway.io
+  - type: LLMsTxt
+    url: https://docs.llmgateway.io/llms.txt
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_decisions
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_systemone
+- aid: llmgateway-io:llmgateway-io-search-api
+  name: LLM Gateway Search API
+  description: The Search API from LLM Gateway — 1 operation(s) for search.
+  humanURL: https://docs.llmgateway.io
+  baseURL: https://api.llmgateway.io
+  tags:
+  - Search
+  properties:
+  - type: OpenAPI
+    url: openapi/llmgateway-io-search-api-openapi.yml
+  - type: Documentation
+    url: https://docs.llmgateway.io
+  - type: LLMsTxt
+    url: https://docs.llmgateway.io/llms.txt
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_decisions
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_systemone
+- aid: llmgateway-io:llmgateway-io-systemone-api
+  name: LLM Gateway Systemone API
+  description: The Systemone API from LLM Gateway — 1 operation(s) for systemone.
+  humanURL: https://docs.llmgateway.io
+  baseURL: https://api.llmgateway.io
+  tags:
+  - Systemone
+  properties:
+  - type: OpenAPI
+    url: openapi/llmgateway-io-systemone-api-openapi.yml
+  - type: Documentation
+    url: https://docs.llmgateway.io
+  - type: LLMsTxt
+    url: https://docs.llmgateway.io/llms.txt
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_decisions
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_systemone
+- aid: llmgateway-io:llmgateway-io-videos-api
+  name: LLM Gateway Videos API
+  description: The Videos API from LLM Gateway — 4 operation(s) for videos.
+  humanURL: https://docs.llmgateway.io
+  baseURL: https://api.llmgateway.io
+  tags:
+  - Videos
+  properties:
+  - type: OpenAPI
+    url: openapi/llmgateway-io-videos-api-openapi.yml
+  - type: Documentation
+    url: https://docs.llmgateway.io
+  - type: LLMsTxt
+    url: https://docs.llmgateway.io/llms.txt
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_decisions
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_systemone
+- aid: llmgateway-io:llmgateway-io-chat-completions-api
+  name: LLM Gateway Chat Completions API
+  description: The Chat Completions API from LLM Gateway — 1 operation(s) for chat completions.
+  humanURL: https://docs.llmgateway.io
+  baseURL: https://api.llmgateway.io/mcp
+  tags:
+  - Chat Completions
+  properties:
+  - type: OpenAPI
+    url: openapi/llmgateway-io-chat-completions-api-openapi.yml
+  - type: Documentation
+    url: https://docs.llmgateway.io
+  - type: LLMsTxt
+    url: https://docs.llmgateway.io/llms.txt
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_decisions
+  - type: Documentation
+    url: https://docs.llmgateway.io/v1_systemone

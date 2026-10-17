@@ -1,0 +1,1120 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: LLM Gateway Videos API
+  description: 'OpenAI-compatible LLM gateway: chat completions, embeddings, images, audio, video, moderation, OCR, rerank, web search and typed decisions across providers with one API key.'
+servers:
+- url: https://api.llmgateway.io
+- url: http://localhost:4001
+tags:
+- name: Videos
+paths:
+  /v1/videos:
+    post:
+      operationId: v1_videos_create
+      summary: Create video
+      description: Creates a new asynchronous video generation job using an OpenAI-compatible request format.
+      security:
+      - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                model:
+                  type: string
+                  default: veo-3.1-generate-preview
+                  description: The video generation model to use. Supports current Veo and Sora video models, including provider-prefixed variants like openai/sora-2 or google-vertex/veo-3.1-generate-preview.
+                  example: veo-3.1-generate-preview
+                prompt:
+                  type: string
+                  minLength: 1
+                  description: Text prompt describing the video to generate.
+                  example: A cinematic drone shot flying through a neon-lit futuristic city at night
+                size:
+                  type: string
+                  description: Output resolution in OpenAI widthxheight format. Supported values depend on the selected model and provider mapping.
+                  example: 1280x720
+                callback_url:
+                  type: string
+                  format: uri
+                  description: LLMGateway extension. When set, a signed webhook is delivered after the job reaches a terminal state.
+                  example: https://example.com/webhooks/video
+                callback_secret:
+                  type: string
+                  minLength: 1
+                  description: LLMGateway extension. Shared secret used to sign webhook deliveries with HMAC-SHA256.
+                  example: whsec_test_secret
+                input_reference:
+                  anyOf:
+                  - type: string
+                  - type: object
+                    properties:
+                      image_url:
+                        type: string
+                    required:
+                    - image_url
+                  - type: array
+                    items:
+                      anyOf:
+                      - type: string
+                      - type: object
+                        properties:
+                          image_url:
+                            type: string
+                        required:
+                        - image_url
+                      description: Input image for image-to-video generation. Supports HTTPS URLs and base64 data URLs. Routed to provider-specific image-to-video generation when supported by the selected model.
+                      example:
+                        image_url: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
+                    minItems: 1
+                    maxItems: 9
+                  description: Reference image input alias. Accepts HTTPS URLs or base64 data URLs and routes to provider-specific image-guided video generation when supported.
+                last_frame:
+                  anyOf:
+                  - type: string
+                  - type: object
+                    properties:
+                      image_url:
+                        type: string
+                    required:
+                    - image_url
+                  description: Optional ending frame for frame-to-video generation. Requires image and is routed to providers that support first/last-frame generation.
+                  example:
+                    image_url: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
+                seconds:
+                  type: integer
+                  minimum: 1
+                  description: Output duration in seconds. Supported values depend on the selected model and provider mapping.
+                  example: 8
+                audio:
+                  type: boolean
+                  default: true
+                  description: Whether the generated video should include audio. Support depends on the selected model and provider mapping.
+                  example: true
+                n:
+                  type: integer
+                image:
+                  anyOf:
+                  - type: string
+                  - type: object
+                    properties:
+                      image_url:
+                        type: string
+                    required:
+                    - image_url
+                  description: Input image for image-to-video generation. Supports HTTPS URLs and base64 data URLs. Routed to provider-specific image-to-video generation when supported by the selected model.
+                  example:
+                    image_url: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
+                reference_images:
+                  type: array
+                  items:
+                    anyOf:
+                    - type: string
+                    - type: object
+                      properties:
+                        image_url:
+                          type: string
+                      required:
+                      - image_url
+                    description: Input image for image-to-video generation. Supports HTTPS URLs and base64 data URLs. Routed to provider-specific image-to-video generation when supported by the selected model.
+                    example:
+                      image_url: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
+                  minItems: 1
+                  maxItems: 9
+                  description: Reference images for provider-specific asset or material-guided video generation. ByteDance Seedance 2.x models accept up to 9; other providers accept up to 3.
+                  example:
+                  - image_url: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
+                reference_videos:
+                  type: array
+                  items:
+                    anyOf:
+                    - type: string
+                      format: uri
+                    - type: object
+                      properties:
+                        video_url:
+                          type: string
+                          format: uri
+                      required:
+                      - video_url
+                    description: Reference video input for omni-reference video generation. Must be a publicly reachable HTTPS URL; base64 data URLs are not supported for videos.
+                    example:
+                      video_url: https://example.com/reference-motion.mp4
+                  minItems: 1
+                  maxItems: 3
+                  description: One to three reference videos (HTTPS URLs) for omni-reference video generation. Currently only supported on ByteDance Seedance 2.x models and can be combined with reference_images.
+                  example:
+                  - video_url: https://example.com/reference-motion.mp4
+                reference_audios:
+                  type: array
+                  items:
+                    anyOf:
+                    - type: string
+                      format: uri
+                    - type: object
+                      properties:
+                        audio_url:
+                          type: string
+                          format: uri
+                      required:
+                      - audio_url
+                    description: Reference audio input for omni-reference video generation. Must be a publicly reachable HTTPS URL; base64 data URLs are not supported for audio.
+                    example:
+                      audio_url: https://example.com/reference-track.mp3
+                  minItems: 1
+                  maxItems: 3
+                  description: One to three reference audio clips (HTTPS URLs) for omni-reference video generation. Currently only supported on ByteDance Seedance 2.x models and can be combined with reference_images and reference_videos.
+                  example:
+                  - audio_url: https://example.com/reference-track.mp3
+              required:
+              - prompt
+              - seconds
+      responses:
+        '200':
+          description: Video job created.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  object:
+                    type: string
+                    enum:
+                    - video
+                  model:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                    - queued
+                    - in_progress
+                    - completed
+                    - failed
+                    - canceled
+                    - expired
+                  progress:
+                    type:
+                    - integer
+                    - 'null'
+                    minimum: 0
+                    maximum: 100
+                  created_at:
+                    type: number
+                  completed_at:
+                    type:
+                    - number
+                    - 'null'
+                  expires_at:
+                    type:
+                    - number
+                    - 'null'
+                  error:
+                    type:
+                    - object
+                    - 'null'
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details: {}
+                    required:
+                    - message
+                  content:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - video
+                        url:
+                          type: string
+                          format: uri
+                        mime_type:
+                          type:
+                          - string
+                          - 'null'
+                      required:
+                      - type
+                      - url
+                  usage:
+                    type: object
+                    properties:
+                      cost:
+                        type: number
+                      cost_details:
+                        type: object
+                        properties:
+                          video_output_cost:
+                            type: number
+                          image_input_cost:
+                            type: number
+                        required:
+                        - video_output_cost
+                        - image_input_cost
+                    required:
+                    - cost
+                    - cost_details
+                    description: Billed cost in USD. Present once the job reaches a terminal status and has been billed.
+                required:
+                - id
+                - object
+                - model
+                - status
+                - progress
+                - created_at
+                - completed_at
+                - expires_at
+                - error
+        '400':
+          description: Invalid request body or parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '402':
+          description: Insufficient credits or plan limits reached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '403':
+          description: Forbidden request or upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '404':
+          description: Unknown model or upstream not-found response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '408':
+          description: Request timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '410':
+          description: Archived or unavailable project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '413':
+          description: Request too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '429':
+          description: Rate limited. Response headers describe only LLMGateway-enforced limits; upstream provider headers are not forwarded. Honor Retry-After when present.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '502':
+          description: Failed to connect to the upstream provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '503':
+          description: Service unavailable upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '504':
+          description: Upstream provider timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '529':
+          description: Gateway overloaded.
+          headers:
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+      tags:
+      - Videos
+  /v1/videos/{video_id}:
+    get:
+      operationId: v1_videos_retrieve
+      summary: Retrieve video
+      description: Retrieves the current state of a video generation job.
+      security:
+      - bearerAuth: []
+      parameters:
+      - schema:
+          type: string
+        required: true
+        name: video_id
+        in: path
+      responses:
+        '200':
+          description: Video job state.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  object:
+                    type: string
+                    enum:
+                    - video
+                  model:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                    - queued
+                    - in_progress
+                    - completed
+                    - failed
+                    - canceled
+                    - expired
+                  progress:
+                    type:
+                    - integer
+                    - 'null'
+                    minimum: 0
+                    maximum: 100
+                  created_at:
+                    type: number
+                  completed_at:
+                    type:
+                    - number
+                    - 'null'
+                  expires_at:
+                    type:
+                    - number
+                    - 'null'
+                  error:
+                    type:
+                    - object
+                    - 'null'
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                      details: {}
+                    required:
+                    - message
+                  content:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - video
+                        url:
+                          type: string
+                          format: uri
+                        mime_type:
+                          type:
+                          - string
+                          - 'null'
+                      required:
+                      - type
+                      - url
+                  usage:
+                    type: object
+                    properties:
+                      cost:
+                        type: number
+                      cost_details:
+                        type: object
+                        properties:
+                          video_output_cost:
+                            type: number
+                          image_input_cost:
+                            type: number
+                        required:
+                        - video_output_cost
+                        - image_input_cost
+                    required:
+                    - cost
+                    - cost_details
+                    description: Billed cost in USD. Present once the job reaches a terminal status and has been billed.
+                required:
+                - id
+                - object
+                - model
+                - status
+                - progress
+                - created_at
+                - completed_at
+                - expires_at
+                - error
+        '400':
+          description: Invalid request body or parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '402':
+          description: Insufficient credits or plan limits reached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '403':
+          description: Forbidden request or upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '404':
+          description: Unknown model or upstream not-found response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '408':
+          description: Request timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '410':
+          description: Archived or unavailable project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '413':
+          description: Request too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '429':
+          description: Rate limited. Response headers describe only LLMGateway-enforced limits; upstream provider headers are not forwarded. Honor Retry-After when present.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '502':
+          description: Failed to connect to the upstream provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '503':
+          description: Service unavailable upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '504':
+          description: Upstream provider timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '529':
+          description: Gateway overloaded.
+          headers:
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+      tags:
+      - Videos
+  /v1/videos/logs/{log_id}/content:
+    get:
+      operationId: v1_videos_log_content
+      summary: Video log content
+      description: Streams generated video content through a gateway-managed proxy URL keyed by log ID.
+      parameters:
+      - schema:
+          type: string
+        required: true
+        name: log_id
+        in: path
+      - schema:
+          type: string
+          minLength: 1
+        required: false
+        name: token
+        in: query
+      - schema:
+          type: string
+          description: Requested byte range for playback or seeking.
+        required: false
+        name: range
+        in: header
+      - schema:
+          type: string
+          description: Return the range only if the upstream validator matches.
+        required: false
+        name: if-range
+        in: header
+      responses:
+        '200':
+          description: Video bytes.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+          content:
+            video/mp4:
+              schema: {}
+            application/octet-stream:
+              schema: {}
+        '206':
+          description: Partial video bytes.
+          headers:
+            Content-Range:
+              schema:
+                type: string
+              required: true
+            Accept-Ranges:
+              schema:
+                type: string
+              required: true
+          content:
+            video/mp4:
+              schema:
+                type: string
+                format: binary
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Invalid request body or parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '402':
+          description: Insufficient credits or plan limits reached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '403':
+          description: Forbidden request or upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '404':
+          description: Unknown model or upstream not-found response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '408':
+          description: Request timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '410':
+          description: Archived or unavailable project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '413':
+          description: Request too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '416':
+          description: The requested byte range is not satisfiable.
+          headers:
+            Content-Range:
+              schema:
+                type: string
+              required: true
+        '429':
+          description: Rate limited. Response headers describe only LLMGateway-enforced limits; upstream provider headers are not forwarded. Honor Retry-After when present.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '502':
+          description: Failed to connect to the upstream provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '503':
+          description: Service unavailable upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '504':
+          description: Upstream provider timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '529':
+          description: Gateway overloaded.
+          headers:
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+      tags:
+      - Videos
+  /v1/videos/{video_id}/content:
+    get:
+      operationId: v1_videos_content
+      summary: Video content
+      description: Streams the generated video content once the job has completed successfully.
+      security:
+      - bearerAuth: []
+      parameters:
+      - schema:
+          type: string
+        required: true
+        name: video_id
+        in: path
+      - schema:
+          type: string
+          description: Requested byte range for playback or seeking.
+        required: false
+        name: range
+        in: header
+      - schema:
+          type: string
+          description: Return the range only if the upstream validator matches.
+        required: false
+        name: if-range
+        in: header
+      responses:
+        '200':
+          description: Video bytes.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+          content:
+            video/mp4:
+              schema: {}
+            application/octet-stream:
+              schema: {}
+        '206':
+          description: Partial video bytes.
+          headers:
+            Content-Range:
+              schema:
+                type: string
+              required: true
+            Accept-Ranges:
+              schema:
+                type: string
+              required: true
+          content:
+            video/mp4:
+              schema:
+                type: string
+                format: binary
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Invalid request body or parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '402':
+          description: Insufficient credits or plan limits reached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '403':
+          description: Forbidden request or upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '404':
+          description: Unknown model or upstream not-found response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '408':
+          description: Request timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '410':
+          description: Archived or unavailable project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '413':
+          description: Request too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '416':
+          description: The requested byte range is not satisfiable.
+          headers:
+            Content-Range:
+              schema:
+                type: string
+              required: true
+        '429':
+          description: Rate limited. Response headers describe only LLMGateway-enforced limits; upstream provider headers are not forwarded. Honor Retry-After when present.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '502':
+          description: Failed to connect to the upstream provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '503':
+          description: Service unavailable upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '504':
+          description: Upstream provider timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '529':
+          description: Gateway overloaded.
+          headers:
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+      tags:
+      - Videos
+components:
+  schemas:
+    OpenAIError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            type:
+              type: string
+            param:
+              type:
+              - string
+              - 'null'
+            code:
+              type:
+              - string
+              - 'null'
+          required:
+          - message
+          - type
+          - param
+          - code
+      required:
+      - error
+      description: OpenAI-compatible error object.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token authentication using API keys
+externalDocs:
+  url: https://docs.llmgateway.io
+  description: LLMGateway Documentation

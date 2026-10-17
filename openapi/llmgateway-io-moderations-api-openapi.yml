@@ -1,0 +1,303 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: LLM Gateway Moderations API
+  description: 'OpenAI-compatible LLM gateway: chat completions, embeddings, images, audio, video, moderation, OCR, rerank, web search and typed decisions across providers with one API key.'
+servers:
+- url: https://api.llmgateway.io
+- url: http://localhost:4001
+tags:
+- name: Moderations
+paths:
+  /v1/moderations:
+    post:
+      operationId: v1_moderations
+      summary: Moderations
+      description: Classify text or multimodal inputs with OpenAI moderation.
+      security:
+      - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input:
+                  anyOf:
+                  - type: string
+                    description: Plain text input to classify.
+                    example: I want to harm someone.
+                  - type: array
+                    items:
+                      type: string
+                      description: Plain text input to classify.
+                      example: I want to harm someone.
+                  - type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - text
+                          - image_url
+                          description: Input item type.
+                          example: text
+                        text:
+                          type: string
+                          description: 'Text content for `type: text` items.'
+                          example: Please review this sentence.
+                        image_url:
+                          type: object
+                          properties:
+                            url:
+                              type: string
+                              description: 'Image URL or data URL for `type: image_url` items.'
+                              example: https://example.com/image.png
+                          required:
+                          - url
+                          description: 'Image payload for `type: image_url` items.'
+                      required:
+                      - type
+                      description: Multimodal moderation input item.
+                  description: Plain text, an array of text strings, or an array of multimodal input items.
+                  example: I want to harm someone.
+                model:
+                  type: string
+                  default: omni-moderation-latest
+                  description: OpenAI moderation model. Defaults to omni-moderation-latest.
+                  example: omni-moderation-latest
+              required:
+              - input
+      responses:
+        '200':
+          description: Moderation response.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Moderation response ID.
+                    example: modr-123
+                  model:
+                    type: string
+                    description: Moderation model used for the request.
+                    example: openai/openai-moderation
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        flagged:
+                          type: boolean
+                          description: Whether the input was flagged.
+                          example: true
+                        categories:
+                          type: object
+                          additionalProperties:
+                            type: boolean
+                          description: Category flags returned by the moderation model.
+                          example:
+                            violence: true
+                            self_harm: false
+                        category_scores:
+                          type: object
+                          additionalProperties:
+                            type: number
+                          description: Model confidence scores for each category.
+                          example:
+                            violence: 0.98
+                            self_harm: 0.01
+                        category_applied_input_types:
+                          type: object
+                          additionalProperties:
+                            type: array
+                            items:
+                              type: string
+                          description: Input types that contributed to each category decision.
+                      required:
+                      - flagged
+                      description: One moderation result entry.
+                    description: Moderation results for the submitted input.
+                description: Moderation response payload.
+        '400':
+          description: Invalid request body or parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '402':
+          description: Insufficient credits or plan limits reached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '403':
+          description: Forbidden request or upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '404':
+          description: Unknown model or upstream not-found response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '408':
+          description: Request timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '410':
+          description: Archived or unavailable project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '413':
+          description: Request too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '429':
+          description: Rate limited. Response headers describe only LLMGateway-enforced limits; upstream provider headers are not forwarded. Honor Retry-After when present.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '502':
+          description: Failed to connect to the upstream provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '503':
+          description: Service unavailable upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '504':
+          description: Upstream provider timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '529':
+          description: Gateway overloaded.
+          headers:
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+      tags:
+      - Moderations
+components:
+  schemas:
+    OpenAIError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            type:
+              type: string
+            param:
+              type:
+              - string
+              - 'null'
+            code:
+              type:
+              - string
+              - 'null'
+          required:
+          - message
+          - type
+          - param
+          - code
+      required:
+      - error
+      description: OpenAI-compatible error object.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token authentication using API keys
+externalDocs:
+  url: https://docs.llmgateway.io
+  description: LLMGateway Documentation

@@ -1,0 +1,690 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: LLM Gateway Images API
+  description: 'OpenAI-compatible LLM gateway: chat completions, embeddings, images, audio, video, moderation, OCR, rerank, web search and typed decisions across providers with one API key.'
+servers:
+- url: https://api.llmgateway.io
+- url: http://localhost:4001
+tags:
+- name: Images
+paths:
+  /v1/images/generations:
+    post:
+      operationId: v1_images_generations
+      summary: Create image
+      description: Creates an image given a prompt. Internally routes to a chat completions model with image generation capabilities.
+      security:
+      - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prompt:
+                  type: string
+                  minLength: 1
+                  description: A text description of the desired image(s).
+                  example: A white siamese cat
+                model:
+                  type: string
+                  default: auto
+                  description: The model to use for image generation. Defaults to auto which selects an appropriate image generation model.
+                  example: gemini-3.1-flash-image
+                n:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  default: 1
+                  description: The number of images to generate. Must be between 1 and 10.
+                  example: 1
+                size:
+                  type: string
+                  description: The size of the generated images. Supported sizes depend on the model and provider.
+                  example: 1024x1024
+                quality:
+                  type: string
+                  enum:
+                  - standard
+                  - hd
+                  - low
+                  - medium
+                  - high
+                  - xhigh
+                  - max
+                  - auto
+                  description: The quality of the image that will be generated. Supported values depend on the model and provider.
+                  example: standard
+                response_format:
+                  type: string
+                  enum:
+                  - b64_json
+                  default: b64_json
+                  description: The format in which the generated images are returned. Only b64_json is supported since images are generated via chat completions models.
+                  example: b64_json
+                style:
+                  type: string
+                  enum:
+                  - vivid
+                  - natural
+                  description: The style of the generated images.
+                  example: vivid
+                aspect_ratio:
+                  type: string
+                  description: The aspect ratio of the generated images (e.g. '1:1', '16:9', '4:3', '5:4'). Takes precedence over size if both are provided.
+                  example: '16:9'
+                moderation:
+                  type: string
+                  enum:
+                  - auto
+                  - low
+                  description: Content moderation strictness for models that support it (GPT Image). 'auto' applies the default filtering, 'low' is less restrictive. Ignored by models without a moderation control.
+                  example: low
+                service_tier:
+                  type: string
+                  enum:
+                  - auto
+                  - default
+                  - flex
+                  - priority
+                  description: Processing tier for the request, forwarded to the underlying chat completion. `flex` and `priority` are only accepted for provider/model mappings that support the tier; an unsupported tier returns a 400 `unsupported_service_tier` error.
+                  example: flex
+              required:
+              - prompt
+      responses:
+        '200':
+          description: Image generation response.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: number
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        b64_json:
+                          type: string
+                        revised_prompt:
+                          type: string
+                      required:
+                      - b64_json
+                  usage:
+                    type: object
+                    properties:
+                      input_tokens:
+                        type: number
+                      input_tokens_details:
+                        type: object
+                        properties:
+                          image_tokens:
+                            type: number
+                          text_tokens:
+                            type: number
+                        required:
+                        - image_tokens
+                        - text_tokens
+                      output_tokens:
+                        type: number
+                      output_tokens_details:
+                        type: object
+                        properties:
+                          image_tokens:
+                            type: number
+                          text_tokens:
+                            type: number
+                        required:
+                        - image_tokens
+                        - text_tokens
+                      total_tokens:
+                        type: number
+                      cost:
+                        type:
+                        - number
+                        - 'null'
+                        description: Total cost of the request in USD.
+                      cost_details:
+                        type: object
+                        additionalProperties:
+                          type:
+                          - number
+                          - 'null'
+                        description: Cost breakdown in USD, matching `usage.cost_details` on chat completions.
+                    required:
+                    - input_tokens
+                    - input_tokens_details
+                    - output_tokens
+                    - output_tokens_details
+                    - total_tokens
+                    description: Token usage and cost of the underlying generation.
+                required:
+                - created
+                - data
+        '400':
+          description: Invalid request body or parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '402':
+          description: Insufficient credits or plan limits reached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '403':
+          description: Forbidden request or upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '404':
+          description: Unknown model or upstream not-found response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '408':
+          description: Request timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '410':
+          description: Archived or unavailable project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '413':
+          description: Request too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '429':
+          description: Rate limited. Response headers describe only LLMGateway-enforced limits; upstream provider headers are not forwarded. Honor Retry-After when present.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '502':
+          description: Failed to connect to the upstream provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '503':
+          description: Service unavailable upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '504':
+          description: Upstream provider timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '529':
+          description: Gateway overloaded.
+          headers:
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+      tags:
+      - Images
+  /v1/images/edits:
+    post:
+      operationId: v1_images_edits
+      summary: Edit image
+      description: Creates an edited image from one or more source images and a prompt.
+      security:
+      - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                images:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      image_url:
+                        type: string
+                        description: A fully qualified HTTPS URL or base64-encoded data URL.
+                        example: https://example.com/source-image.png
+                    required:
+                    - image_url
+                  minItems: 1
+                  maxItems: 16
+                  description: Input image references to edit. Provide image_url as HTTPS URL or data URL.
+                prompt:
+                  type: string
+                  minLength: 1
+                  description: A text description of the desired image edit.
+                  example: Add a watercolor effect to this image
+                background:
+                  type: string
+                  enum:
+                  - transparent
+                  - opaque
+                  - auto
+                  description: Background behavior for generated image output.
+                  example: transparent
+                input_fidelity:
+                  type: string
+                  enum:
+                  - high
+                  - low
+                  description: Controls fidelity to the original input image(s).
+                  example: high
+                model:
+                  type: string
+                  description: The model to use for image editing.
+                  example: gemini-3-pro-image
+                n:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  description: The number of edited images to generate.
+                  example: 1
+                output_compression:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
+                  description: Compression level for jpeg or webp output.
+                  example: 100
+                output_format:
+                  type: string
+                  enum:
+                  - png
+                  - jpeg
+                  - webp
+                  description: Output image format.
+                  example: png
+                quality:
+                  type: string
+                  enum:
+                  - low
+                  - medium
+                  - high
+                  - xhigh
+                  - max
+                  - auto
+                  description: Output quality for image models.
+                  example: high
+                size:
+                  type: string
+                  description: Requested output image size. Supported values depend on the model and provider.
+                  example: 1024x1024
+                aspect_ratio:
+                  type: string
+                  description: The aspect ratio of the edited images (e.g. '1:1', '16:9', '4:3', '5:4'). Takes precedence over size-derived defaults.
+                  example: '16:9'
+                moderation:
+                  type: string
+                  enum:
+                  - auto
+                  - low
+                  description: Content moderation strictness for models that support it (GPT Image). 'auto' applies the default filtering, 'low' is less restrictive. Ignored by models without a moderation control.
+                  example: low
+                service_tier:
+                  type: string
+                  enum:
+                  - auto
+                  - default
+                  - flex
+                  - priority
+                  description: Processing tier for the request, forwarded to the underlying chat completion. `flex` and `priority` are only accepted for provider/model mappings that support the tier; an unsupported tier returns a 400 `unsupported_service_tier` error.
+                  example: flex
+              required:
+              - images
+              - prompt
+      responses:
+        '200':
+          description: Image edit response.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: number
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        b64_json:
+                          type: string
+                        revised_prompt:
+                          type: string
+                      required:
+                      - b64_json
+                  usage:
+                    type: object
+                    properties:
+                      input_tokens:
+                        type: number
+                      input_tokens_details:
+                        type: object
+                        properties:
+                          image_tokens:
+                            type: number
+                          text_tokens:
+                            type: number
+                        required:
+                        - image_tokens
+                        - text_tokens
+                      output_tokens:
+                        type: number
+                      output_tokens_details:
+                        type: object
+                        properties:
+                          image_tokens:
+                            type: number
+                          text_tokens:
+                            type: number
+                        required:
+                        - image_tokens
+                        - text_tokens
+                      total_tokens:
+                        type: number
+                      cost:
+                        type:
+                        - number
+                        - 'null'
+                        description: Total cost of the request in USD.
+                      cost_details:
+                        type: object
+                        additionalProperties:
+                          type:
+                          - number
+                          - 'null'
+                        description: Cost breakdown in USD, matching `usage.cost_details` on chat completions.
+                    required:
+                    - input_tokens
+                    - input_tokens_details
+                    - output_tokens
+                    - output_tokens_details
+                    - total_tokens
+                    description: Token usage and cost of the underlying generation.
+                  background:
+                    type: string
+                    enum:
+                    - transparent
+                    - opaque
+                  output_format:
+                    type: string
+                    enum:
+                    - png
+                    - webp
+                    - jpeg
+                  quality:
+                    type: string
+                    enum:
+                    - low
+                    - medium
+                    - high
+                    - xhigh
+                    - max
+                  size:
+                    type: string
+                required:
+                - created
+                - data
+        '400':
+          description: Invalid request body or parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '402':
+          description: Insufficient credits or plan limits reached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '403':
+          description: Forbidden request or upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '404':
+          description: Unknown model or upstream not-found response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '408':
+          description: Request timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '410':
+          description: Archived or unavailable project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '413':
+          description: Request too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '429':
+          description: Rate limited. Response headers describe only LLMGateway-enforced limits; upstream provider headers are not forwarded. Honor Retry-After when present.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '502':
+          description: Failed to connect to the upstream provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '503':
+          description: Service unavailable upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '504':
+          description: Upstream provider timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '529':
+          description: Gateway overloaded.
+          headers:
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+      tags:
+      - Images
+components:
+  schemas:
+    OpenAIError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            type:
+              type: string
+            param:
+              type:
+              - string
+              - 'null'
+            code:
+              type:
+              - string
+              - 'null'
+          required:
+          - message
+          - type
+          - param
+          - code
+      required:
+      - error
+      description: OpenAI-compatible error object.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token authentication using API keys
+externalDocs:
+  url: https://docs.llmgateway.io
+  description: LLMGateway Documentation

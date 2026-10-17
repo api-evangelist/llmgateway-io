@@ -1,0 +1,836 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: LLM Gateway Messages API
+  description: 'OpenAI-compatible LLM gateway: chat completions, embeddings, images, audio, video, moderation, OCR, rerank, web search and typed decisions across providers with one API key.'
+servers:
+- url: https://api.llmgateway.io
+- url: http://localhost:4001
+tags:
+- name: Messages
+paths:
+  /v1/messages:
+    post:
+      operationId: v1_messages
+      summary: Anthropic Messages
+      description: Create a message using Anthropic's API format
+      security:
+      - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                model:
+                  type: string
+                  description: The model to use for completion
+                  example: claude-3-5-sonnet-20241022
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      role:
+                        type: string
+                        enum:
+                        - system
+                        - developer
+                        - user
+                        - assistant
+                        - tool
+                        - function
+                      content:
+                        anyOf:
+                        - type: string
+                        - type: array
+                          items:
+                            anyOf:
+                            - type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                  - text
+                                text:
+                                  type: string
+                                cache_control:
+                                  type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                      - ephemeral
+                                    ttl:
+                                      type: string
+                                      enum:
+                                      - 5m
+                                      - 1h
+                                  required:
+                                  - type
+                              required:
+                              - type
+                              - text
+                            - type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                  - image
+                                source:
+                                  type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                      - base64
+                                    media_type:
+                                      type: string
+                                    data:
+                                      type: string
+                                  required:
+                                  - type
+                                  - media_type
+                                  - data
+                              required:
+                              - type
+                              - source
+                            - type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                  - tool_use
+                                id:
+                                  type: string
+                                name:
+                                  type: string
+                                input:
+                                  type: object
+                                  additionalProperties: {}
+                              required:
+                              - type
+                              - id
+                              - name
+                              - input
+                            - type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                  - tool_result
+                                tool_use_id:
+                                  type: string
+                                content:
+                                  anyOf:
+                                  - type: string
+                                  - type: array
+                                    items: {}
+                                is_error:
+                                  type: boolean
+                                cache_control:
+                                  type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                      - ephemeral
+                                    ttl:
+                                      type: string
+                                      enum:
+                                      - 5m
+                                      - 1h
+                                  required:
+                                  - type
+                              required:
+                              - type
+                              - tool_use_id
+                            - type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                  - thinking
+                                thinking:
+                                  type: string
+                                signature:
+                                  type: string
+                              required:
+                              - type
+                              - thinking
+                            - type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                  - redacted_thinking
+                                data:
+                                  type: string
+                              required:
+                              - type
+                              - data
+                            - type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                  - server_tool_use
+                                id:
+                                  type: string
+                                name:
+                                  type: string
+                                input:
+                                  type: object
+                                  additionalProperties: {}
+                              required:
+                              - type
+                              - id
+                              - name
+                            - type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                  - web_search_tool_result
+                                tool_use_id:
+                                  type: string
+                                content:
+                                  anyOf:
+                                  - type: array
+                                    items: {}
+                                  - type: object
+                                    additionalProperties: {}
+                              required:
+                              - type
+                              - tool_use_id
+                            - type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                  - tool_search_tool_result
+                                tool_use_id:
+                                  type: string
+                                content:
+                                  type: object
+                                  additionalProperties: {}
+                              required:
+                              - type
+                              - tool_use_id
+                            - type: object
+                              properties:
+                                type:
+                                  type: string
+                                  enum:
+                                  - tool_addition
+                                  - tool_removal
+                                tool:
+                                  anyOf:
+                                  - type: object
+                                    properties:
+                                      type:
+                                        type: string
+                                        enum:
+                                        - tool_reference
+                                      name:
+                                        type: string
+                                    required:
+                                    - type
+                                    - name
+                                  - type: object
+                                    properties:
+                                      type:
+                                        type: string
+                                        enum:
+                                        - tool_definition
+                                      definition:
+                                        type: object
+                                        properties:
+                                          type:
+                                            type: string
+                                            enum:
+                                            - custom
+                                          name:
+                                            type: string
+                                          description:
+                                            type: string
+                                          input_schema:
+                                            type: object
+                                            additionalProperties: {}
+                                          cache_control:
+                                            type:
+                                            - object
+                                            - 'null'
+                                            properties:
+                                              type:
+                                                type: string
+                                                enum:
+                                                - ephemeral
+                                              ttl:
+                                                type: string
+                                                enum:
+                                                - 5m
+                                                - 1h
+                                            required:
+                                            - type
+                                          defer_loading:
+                                            type: boolean
+                                        required:
+                                        - name
+                                        - input_schema
+                                    required:
+                                    - type
+                                    - definition
+                                cache_control:
+                                  type: object
+                                  properties:
+                                    type:
+                                      type: string
+                                      enum:
+                                      - ephemeral
+                                    ttl:
+                                      type: string
+                                      enum:
+                                      - 5m
+                                      - 1h
+                                  required:
+                                  - type
+                              required:
+                              - type
+                              - tool
+                            - type: object
+                              properties:
+                                type:
+                                  type: string
+                              required:
+                              - type
+                      tool_call_id:
+                        type: string
+                      name:
+                        type: string
+                      tool_calls:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            type:
+                              type: string
+                              enum:
+                              - function
+                            function:
+                              type: object
+                              properties:
+                                name:
+                                  type: string
+                                arguments:
+                                  type: string
+                              required:
+                              - name
+                              - arguments
+                          required:
+                          - id
+                          - type
+                          - function
+                      function_call:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          arguments:
+                            anyOf:
+                            - type: string
+                            - type: object
+                              additionalProperties: {}
+                        required:
+                        - name
+                        - arguments
+                    required:
+                    - role
+                    - content
+                  description: Array of message objects
+                max_tokens:
+                  type: number
+                  minimum: 1
+                  description: Maximum number of tokens to generate
+                  example: 1024
+                system:
+                  anyOf:
+                  - type: string
+                  - type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - text
+                        text:
+                          type: string
+                        cache_control:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                              - ephemeral
+                            ttl:
+                              type: string
+                              enum:
+                              - 5m
+                              - 1h
+                          required:
+                          - type
+                      required:
+                      - type
+                      - text
+                  description: System prompt to provide context
+                temperature:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                  description: Sampling temperature between 0 and 1
+                  example: 0.7
+                tools:
+                  type: array
+                  items:
+                    anyOf:
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - custom
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        input_schema:
+                          type: object
+                          additionalProperties: {}
+                        cache_control:
+                          type:
+                          - object
+                          - 'null'
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                              - ephemeral
+                            ttl:
+                              type: string
+                              enum:
+                              - 5m
+                              - 1h
+                          required:
+                          - type
+                        defer_loading:
+                          type: boolean
+                      required:
+                      - name
+                      - input_schema
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          pattern: ^tool_search_tool
+                        name:
+                          type: string
+                      required:
+                      - type
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                        name:
+                          type: string
+                        max_uses:
+                          type: number
+                        allowed_domains:
+                          type: array
+                          items:
+                            type: string
+                        blocked_domains:
+                          type: array
+                          items:
+                            type: string
+                        user_location:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                              - approximate
+                            city:
+                              type: string
+                            region:
+                              type: string
+                            country:
+                              type: string
+                            timezone:
+                              type: string
+                        cache_control:
+                          type:
+                          - object
+                          - 'null'
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                              - ephemeral
+                            ttl:
+                              type: string
+                              enum:
+                              - 5m
+                              - 1h
+                          required:
+                          - type
+                      required:
+                      - type
+                      - name
+                  description: Available tools for the model to use
+                stream:
+                  type: boolean
+                  default: false
+                  description: Whether to stream the response
+                  example: false
+                metadata:
+                  type: object
+                  properties:
+                    user_id:
+                      type: string
+                  description: Anthropic request metadata. Claude Code embeds the session id in user_id, which the gateway uses for sticky routing.
+                thinking:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    budget_tokens:
+                      type: integer
+                      exclusiveMinimum: 0
+                  required:
+                  - type
+                  description: Anthropic extended-thinking configuration. Mapped onto the gateway's unified reasoning controls so the requested effort reaches the provider.
+                output_config:
+                  type: object
+                  properties:
+                    effort:
+                      type: string
+                      enum:
+                      - none
+                      - minimal
+                      - low
+                      - medium
+                      - high
+                      - xhigh
+                      - max
+                  description: Anthropic output configuration. `effort` controls adaptive reasoning depth on Opus 4.7+ models.
+                safeguards:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                    required:
+                    - type
+                  description: Anthropic server-side safeguard review, sent by Claude Code in auto mode with its paired `anthropic-beta` value. Forwarded to the Anthropic API only; the verdicts come back as `safeguard_results`.
+              required:
+              - model
+              - messages
+              - max_tokens
+      responses:
+        '200':
+          description: Successful response
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  type:
+                    type: string
+                    enum:
+                    - message
+                  role:
+                    type: string
+                    enum:
+                    - assistant
+                  model:
+                    type: string
+                  content:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - text
+                          - tool_use
+                          - thinking
+                          - server_tool_use
+                          - web_search_tool_result
+                          - tool_search_tool_result
+                        text:
+                          type: string
+                        thinking:
+                          type: string
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        input:
+                          type: object
+                          additionalProperties: {}
+                        tool_use_id:
+                          type: string
+                        content:
+                          anyOf:
+                          - type: array
+                            items: {}
+                          - type: object
+                            additionalProperties: {}
+                      required:
+                      - type
+                  stop_reason:
+                    type:
+                    - string
+                    - 'null'
+                    enum:
+                    - end_turn
+                    - max_tokens
+                    - stop_sequence
+                    - tool_use
+                    - pause_turn
+                    - refusal
+                  stop_sequence:
+                    type:
+                    - string
+                    - 'null'
+                  usage:
+                    type: object
+                    properties:
+                      input_tokens:
+                        type: number
+                      output_tokens:
+                        type: number
+                      cache_creation_input_tokens:
+                        type: number
+                        default: 0
+                      cache_read_input_tokens:
+                        type: number
+                        default: 0
+                      cache_creation:
+                        type: object
+                        properties:
+                          ephemeral_5m_input_tokens:
+                            type: number
+                          ephemeral_1h_input_tokens:
+                            type: number
+                        required:
+                        - ephemeral_5m_input_tokens
+                        - ephemeral_1h_input_tokens
+                    required:
+                    - input_tokens
+                    - output_tokens
+                  metadata:
+                    type: object
+                    additionalProperties: {}
+                    description: 'Gateway routing metadata, the same object /v1/chat/completions returns: used_provider, used_model, used_region and routing attempts. On streams it rides on the message_delta event.'
+                  safeguard_results:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: {}
+                    description: Anthropic's server-side safeguard verdicts, returned verbatim when the request carried `safeguards`. On streams it rides on the message_delta event's delta.
+                required:
+                - id
+                - type
+                - role
+                - model
+                - content
+                - stop_reason
+                - stop_sequence
+                - usage
+            text/event-stream:
+              schema:
+                type: string
+        '400':
+          description: Invalid request body or parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicError'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicError'
+        '402':
+          description: Insufficient credits or plan limits reached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicError'
+        '403':
+          description: Forbidden request or upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicError'
+        '404':
+          description: Unknown model or upstream not-found response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicError'
+        '408':
+          description: Request timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicError'
+        '410':
+          description: Archived or unavailable project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicError'
+        '413':
+          description: Request too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicError'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicError'
+        '429':
+          description: Rate limited. Response headers describe only LLMGateway-enforced limits; upstream provider headers are not forwarded. Honor Retry-After when present.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicError'
+        '502':
+          description: Failed to connect to the upstream provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicError'
+        '503':
+          description: Service unavailable upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicError'
+        '504':
+          description: Upstream provider timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicError'
+        '529':
+          description: Gateway overloaded.
+          headers:
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnthropicError'
+      tags:
+      - Messages
+components:
+  schemas:
+    AnthropicError:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - error
+        error:
+          type: object
+          properties:
+            type:
+              type: string
+            message:
+              type: string
+          required:
+          - type
+          - message
+      required:
+      - type
+      - error
+      description: Anthropic-compatible error object.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token authentication using API keys
+externalDocs:
+  url: https://docs.llmgateway.io
+  description: LLMGateway Documentation

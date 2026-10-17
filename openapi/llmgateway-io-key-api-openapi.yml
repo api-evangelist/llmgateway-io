@@ -1,0 +1,260 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: LLM Gateway Key API
+  description: 'OpenAI-compatible LLM gateway: chat completions, embeddings, images, audio, video, moderation, OCR, rerank, web search and typed decisions across providers with one API key.'
+servers:
+- url: https://api.llmgateway.io
+- url: http://localhost:4001
+tags:
+- name: Key
+paths:
+  /v1/key:
+    get:
+      operationId: v1_key_retrieve
+      summary: Retrieve key status
+      description: Returns usage information for the API key used to authenticate the request, including the organization's dev plan allowance and weekly premium-model usage. Lets clients that only hold an API key surface remaining quota without a dashboard session. Deliberately excludes billing details and the key token itself.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Status of the API key and its organization's dev plan.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      label:
+                        type: string
+                        description: Description of the API key used for the request.
+                      usage:
+                        type: string
+                        description: Total usage in USD accrued by this API key.
+                      limit:
+                        type:
+                        - string
+                        - 'null'
+                        description: Usage limit in USD set on this API key, if any.
+                      devPlan:
+                        type: string
+                        enum:
+                        - none
+                        - lite
+                        - pro
+                        - max
+                        description: Dev plan tier of the organization this key belongs to. 'none' for pay-as-you-go organizations.
+                      devPlanCreditsUsed:
+                        type: string
+                        description: Plan credits used in the current billing cycle, in USD.
+                      devPlanCreditsLimit:
+                        type: string
+                        description: Plan credit allowance per billing cycle, in USD.
+                      devPlanCreditsRemaining:
+                        type: string
+                        description: Plan credits remaining in the current billing cycle.
+                      devPlanPremiumWeeklyLimit:
+                        type: string
+                        description: Weekly fair-use allowance for premium models, in USD of plan credits.
+                      devPlanPremiumCreditsUsed:
+                        type: string
+                        description: Premium-model plan credits used in the current weekly window.
+                      devPlanPremiumWeekResetsAt:
+                        type:
+                        - string
+                        - 'null'
+                        description: When the current premium weekly window resets (ISO 8601), or null when no window is active.
+                    required:
+                    - label
+                    - usage
+                    - limit
+                    - devPlan
+                    - devPlanCreditsUsed
+                    - devPlanCreditsLimit
+                    - devPlanCreditsRemaining
+                    - devPlanPremiumWeeklyLimit
+                    - devPlanPremiumCreditsUsed
+                    - devPlanPremiumWeekResetsAt
+                required:
+                - data
+        '400':
+          description: Invalid request body or parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '402':
+          description: Insufficient credits or plan limits reached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '403':
+          description: Forbidden request or upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '404':
+          description: Unknown model or upstream not-found response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '408':
+          description: Request timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '410':
+          description: Archived or unavailable project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '413':
+          description: Request too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '429':
+          description: Rate limited. Response headers describe only LLMGateway-enforced limits; upstream provider headers are not forwarded. Honor Retry-After when present.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '502':
+          description: Failed to connect to the upstream provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '503':
+          description: Service unavailable upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '504':
+          description: Upstream provider timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '529':
+          description: Gateway overloaded.
+          headers:
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+      tags:
+      - Key
+components:
+  schemas:
+    OpenAIError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            type:
+              type: string
+            param:
+              type:
+              - string
+              - 'null'
+            code:
+              type:
+              - string
+              - 'null'
+          required:
+          - message
+          - type
+          - param
+          - code
+      required:
+      - error
+      description: OpenAI-compatible error object.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token authentication using API keys
+externalDocs:
+  url: https://docs.llmgateway.io
+  description: LLMGateway Documentation

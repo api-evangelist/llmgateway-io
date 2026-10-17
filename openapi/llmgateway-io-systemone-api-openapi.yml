@@ -1,0 +1,379 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: LLM Gateway Systemone API
+  description: 'OpenAI-compatible LLM gateway: chat completions, embeddings, images, audio, video, moderation, OCR, rerank, web search and typed decisions across providers with one API key.'
+servers:
+- url: https://api.llmgateway.io
+- url: http://localhost:4001
+tags:
+- name: Systemone
+paths:
+  /v1/systemone:
+    post:
+      operationId: v1_systemone
+      summary: System One
+      description: Evaluate a state against named typed questions and get calibrated yes/no, choice and score answers back. TypeSafe-compatible API, serving TypeSafe models only. To be deprecated soon in favor of the OpenAI-compatible /v1/decisions, which serves every decision model.
+      security:
+      - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                model:
+                  type: string
+                  description: ID of the decision model to use. Optionally prefixed with a provider (`typesafe/…`).
+                  example: jev-1.13.0
+                state:
+                  anyOf:
+                  - type: string
+                  - type: object
+                    additionalProperties: {}
+                  - type: array
+                    items: {}
+                  description: 'The content to evaluate: plain text, or structured data such as a chat log or record.'
+                  example: Our production integration has been returning 500s for 3 days.
+                questions:
+                  type: object
+                  additionalProperties:
+                    oneOf:
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - noul
+                        instructions:
+                          anyOf:
+                          - type: string
+                          - type: object
+                            additionalProperties: {}
+                          - type: array
+                            items: {}
+                          description: What the model should decide. An object or array can hold the question in one field and the data it refers to in others.
+                          example: Does this message convey urgency?
+                        criteria:
+                          type: object
+                          properties:
+                            'true':
+                              anyOf:
+                              - type: string
+                              - type: object
+                                additionalProperties: {}
+                              - type: array
+                                items: {}
+                            'false':
+                              anyOf:
+                              - type: string
+                              - type: object
+                                additionalProperties: {}
+                              - type: array
+                                items: {}
+                          description: Optional descriptions of what a yes and a no mean.
+                      required:
+                      - type
+                      - instructions
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - choice
+                        instructions:
+                          anyOf:
+                          - type: string
+                          - type: object
+                            additionalProperties: {}
+                          - type: array
+                            items: {}
+                          description: What the model should decide. An object or array can hold the question in one field and the data it refers to in others.
+                          example: Does this message convey urgency?
+                        criteria:
+                          type: object
+                          additionalProperties:
+                            anyOf:
+                            - type: string
+                            - type: object
+                              additionalProperties: {}
+                            - type: array
+                              items: {}
+                            - {}
+                          description: Option to rubric description. Use null for an option that needs no detail.
+                      required:
+                      - type
+                      - instructions
+                      - criteria
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - score
+                        instructions:
+                          anyOf:
+                          - type: string
+                          - type: object
+                            additionalProperties: {}
+                          - type: array
+                            items: {}
+                          description: What the model should decide. An object or array can hold the question in one field and the data it refers to in others.
+                          example: Does this message convey urgency?
+                        criteria:
+                          type: array
+                          items:
+                            anyOf:
+                            - type: string
+                            - type: object
+                              additionalProperties: {}
+                            - type: array
+                              items: {}
+                          minItems: 2
+                          maxItems: 10
+                          description: Ordered level descriptions, lowest first. Two to ten levels.
+                      required:
+                      - type
+                      - instructions
+                      - criteria
+                    description: 'A typed question: `noul` (yes/no probability), `choice` (one option from a set) or `score` (rating across ordered levels).'
+                  description: Questions keyed by an id you choose. Answers come back under the same ids.
+              required:
+              - model
+              - state
+              - questions
+      responses:
+        '200':
+          description: Typed answers for the submitted questions.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  model:
+                    type: string
+                  answers:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - noul
+                          - choice
+                          - score
+                        noul:
+                          type: number
+                          description: Yes/no answer from 0 (no) to 1 (yes), on a noul answer.
+                        choice:
+                          type: string
+                          description: Highest-probability option, on a choice answer.
+                        score:
+                          type: number
+                          description: Probability-weighted level, on a score answer. Can land between levels.
+                        legend:
+                          type: object
+                          additionalProperties:
+                            type: string
+                          description: Level index to its description, on a score answer.
+                        probabilities:
+                          type: object
+                          additionalProperties:
+                            type: number
+                          description: Probability per option or level; sums to 1.
+                        confidence:
+                          type: number
+                          description: How certain the model is, derived from the probability distribution.
+                      required:
+                      - type
+                  usage:
+                    type: object
+                    properties:
+                      input_tokens:
+                        type: integer
+                      output_tokens:
+                        type: integer
+                required:
+                - model
+                - answers
+                description: One typed answer per question, keyed by the question ids.
+        '400':
+          description: Invalid request body or parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '402':
+          description: Insufficient credits or plan limits reached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '403':
+          description: Forbidden request or upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '404':
+          description: Unknown model or upstream not-found response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '408':
+          description: Request timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '410':
+          description: Archived or unavailable project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '413':
+          description: Request too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '429':
+          description: Rate limited. Response headers describe only LLMGateway-enforced limits; upstream provider headers are not forwarded. Honor Retry-After when present.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '502':
+          description: Failed to connect to the upstream provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '503':
+          description: Service unavailable upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '504':
+          description: Upstream provider timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '529':
+          description: Gateway overloaded.
+          headers:
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+      tags:
+      - Systemone
+components:
+  schemas:
+    OpenAIError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            type:
+              type: string
+            param:
+              type:
+              - string
+              - 'null'
+            code:
+              type:
+              - string
+              - 'null'
+          required:
+          - message
+          - type
+          - param
+          - code
+      required:
+      - error
+      description: OpenAI-compatible error object.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token authentication using API keys
+externalDocs:
+  url: https://docs.llmgateway.io
+  description: LLMGateway Documentation

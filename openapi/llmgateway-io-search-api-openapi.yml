@@ -1,0 +1,336 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: LLM Gateway Search API
+  description: 'OpenAI-compatible LLM gateway: chat completions, embeddings, images, audio, video, moderation, OCR, rerank, web search and typed decisions across providers with one API key.'
+servers:
+- url: https://api.llmgateway.io
+- url: http://localhost:4001
+tags:
+- name: Search
+paths:
+  /v1/search:
+    post:
+      operationId: v1_search
+      summary: Search
+      description: Search the web and return ranked results with extracted page content. Perplexity Search API-compatible.
+      security:
+      - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                model:
+                  type: string
+                  description: ID of the search model to use, or "auto" for the cheapest active search model (matching search_type when set). Defaults to perplexity/perplexity-search, or perplexity/perplexity-search-fast when search_type is fast.
+                  example: perplexity/perplexity-search
+                query:
+                  anyOf:
+                  - type: string
+                    minLength: 1
+                  - type: array
+                    items:
+                      type: string
+                      minLength: 1
+                    minItems: 1
+                    maxItems: 5
+                  description: Search query, or up to 5 related queries that are searched independently and billed as one request.
+                  example: latest developments in open-source LLMs
+                search_type:
+                  type: string
+                  enum:
+                  - web
+                  - fast
+                  - people
+                  description: Perplexity search type. "web" and "fast" select perplexity-search and perplexity-search-fast; "people" is not supported yet.
+                  example: web
+                max_results:
+                  type: integer
+                  minimum: 1
+                  maximum: 50
+                  description: Maximum number of results to return. Defaults to 10.
+                  example: 5
+                max_tokens:
+                  type: integer
+                  maximum: 1000000
+                  description: Maximum total tokens of extracted content across all results.
+                  exclusiveMinimum: 0
+                max_tokens_per_page:
+                  type: integer
+                  maximum: 1000000
+                  description: Maximum tokens of extracted content per result.
+                  exclusiveMinimum: 0
+                search_context_size:
+                  type: string
+                  enum:
+                  - low
+                  - medium
+                  - high
+                  description: How much page content to extract per result.
+                country:
+                  type: string
+                  minLength: 2
+                  maxLength: 2
+                  description: ISO 3166-1 alpha-2 country code for regional results.
+                  example: US
+                search_language_filter:
+                  type: array
+                  items:
+                    type: string
+                  maxItems: 20
+                  description: ISO 639-1 language codes to restrict results to.
+                search_domain_filter:
+                  type: array
+                  items:
+                    type: string
+                  maxItems: 20
+                  description: Domains to restrict results to, or to exclude with a "-" prefix.
+                  example:
+                  - arxiv.org
+                  - nature.com
+                search_recency_filter:
+                  type: string
+                  enum:
+                  - hour
+                  - day
+                  - week
+                  - month
+                  - year
+                  description: Only return results published within this period.
+                search_after_date_filter:
+                  type: string
+                  pattern: ^\d{1,2}\/\d{1,2}\/\d{4}$
+                search_before_date_filter:
+                  type: string
+                  pattern: ^\d{1,2}\/\d{1,2}\/\d{4}$
+                last_updated_after_filter:
+                  type: string
+                  pattern: ^\d{1,2}\/\d{1,2}\/\d{4}$
+                last_updated_before_filter:
+                  type: string
+                  pattern: ^\d{1,2}\/\d{1,2}\/\d{4}$
+              required:
+              - query
+      responses:
+        '200':
+          description: Search response with ranked web results.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  model:
+                    type: string
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        title:
+                          type: string
+                        url:
+                          type: string
+                        snippet:
+                          type: string
+                        date:
+                          type:
+                          - string
+                          - 'null'
+                        last_updated:
+                          type:
+                          - string
+                          - 'null'
+                      required:
+                      - title
+                      - url
+                  server_time:
+                    type:
+                    - string
+                    - 'null'
+                required:
+                - model
+                - results
+                description: Perplexity-compatible search response payload.
+        '400':
+          description: Invalid request body or parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '402':
+          description: Insufficient credits or plan limits reached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '403':
+          description: Forbidden request or upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '404':
+          description: Unknown model or upstream not-found response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '408':
+          description: Request timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '410':
+          description: Archived or unavailable project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '413':
+          description: Request too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '429':
+          description: Rate limited. Response headers describe only LLMGateway-enforced limits; upstream provider headers are not forwarded. Honor Retry-After when present.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '502':
+          description: Failed to connect to the upstream provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '503':
+          description: Service unavailable upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '504':
+          description: Upstream provider timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '529':
+          description: Gateway overloaded.
+          headers:
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+      tags:
+      - Search
+components:
+  schemas:
+    OpenAIError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            type:
+              type: string
+            param:
+              type:
+              - string
+              - 'null'
+            code:
+              type:
+              - string
+              - 'null'
+          required:
+          - message
+          - type
+          - param
+          - code
+      required:
+      - error
+      description: OpenAI-compatible error object.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token authentication using API keys
+externalDocs:
+  url: https://docs.llmgateway.io
+  description: LLMGateway Documentation

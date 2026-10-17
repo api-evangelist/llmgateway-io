@@ -1,0 +1,511 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: LLM Gateway Models API
+  description: 'OpenAI-compatible LLM gateway: chat completions, embeddings, images, audio, video, moderation, OCR, rerank, web search and typed decisions across providers with one API key.'
+servers:
+- url: https://api.llmgateway.io
+- url: http://localhost:4001
+tags:
+- name: Models
+paths:
+  /v1/models:
+    get:
+      operationId: v1_models
+      summary: Models
+      description: List the public model catalogue without authentication. With an API key, return only models and provider mappings allowed by its organization compliance policy, IAM rules, and project access, including accessible custom models. Set include_restricted=true to return the public catalogue regardless of these restrictions.
+      security:
+      - {}
+      - bearerAuth: []
+      parameters:
+      - schema:
+          type: string
+          description: Return the public catalogue instead of the authenticated caller's accessible models. Other query filters still apply. Does not grant permission to call restricted models or include private custom models.
+          example: 'false'
+        required: false
+        description: Return the public catalogue instead of the authenticated caller's accessible models. Other query filters still apply. Does not grant permission to call restricted models or include private custom models.
+        name: include_restricted
+        in: query
+      - schema:
+          type: string
+          description: Include deactivated models in the response
+          example: 'false'
+        required: false
+        description: Include deactivated models in the response
+        name: include_deactivated
+        in: query
+      - schema:
+          type: string
+          description: Exclude deprecated models from the response
+          example: 'false'
+        required: false
+        description: Exclude deprecated models from the response
+        name: exclude_deprecated
+        in: query
+      - schema:
+          type: string
+          description: Only return models and provider mappings whose provider does not train on API data
+          example: 'false'
+        required: false
+        description: Only return models and provider mappings whose provider does not train on API data
+        name: no_training
+        in: query
+      - schema:
+          type: string
+          description: Return one entry per provider mapping with `provider/model-id` ids (the gateway's provider-pinned request format) instead of one aggregated entry per model. Each entry carries that specific mapping's pricing, context length, and capabilities.
+          example: 'false'
+        required: false
+        description: Return one entry per provider mapping with `provider/model-id` ids (the gateway's provider-pinned request format) instead of one aggregated entry per model. Each entry carries that specific mapping's pricing, context length, and capabilities.
+        name: mapped
+        in: query
+      responses:
+        '200':
+          description: List of available models
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        display_name:
+                          type: string
+                          description: Human-readable model label, mirroring `name`. Anthropic-format clients such as Claude Code read this field when populating their model picker from gateway model discovery.
+                        aliases:
+                          type: array
+                          items:
+                            type: string
+                        created:
+                          type: number
+                        description:
+                          type: string
+                        family:
+                          type: string
+                        architecture:
+                          type: object
+                          properties:
+                            input_modalities:
+                              type: array
+                              items:
+                                type: string
+                                enum:
+                                - text
+                                - image
+                                - video
+                                - embedding
+                                - audio
+                            output_modalities:
+                              type: array
+                              items:
+                                type: string
+                                enum:
+                                - text
+                                - image
+                                - video
+                                - embedding
+                                - audio
+                                - ocr
+                                - transcription
+                                - rerank
+                                - decision
+                                - search
+                            tokenizer:
+                              type: string
+                          required:
+                          - input_modalities
+                          - output_modalities
+                        top_provider:
+                          type: object
+                          properties:
+                            is_moderated:
+                              type: boolean
+                          required:
+                          - is_moderated
+                        providers:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              providerId:
+                                type: string
+                              externalId:
+                                type: string
+                              supportedVideoSizes:
+                                type: array
+                                items:
+                                  type: string
+                              supportsVideoAudio:
+                                type: boolean
+                              supportsVideoWithoutAudio:
+                                type: boolean
+                              pricing:
+                                type: object
+                                properties:
+                                  prompt:
+                                    type: string
+                                  completion:
+                                    type: string
+                                  image:
+                                    type: string
+                                  input_audio:
+                                    type: string
+                                  input_audio_cache_read:
+                                    type: string
+                                  output_audio:
+                                    type: string
+                                  per_second:
+                                    type: object
+                                    additionalProperties:
+                                      type: string
+                                  per_image:
+                                    type: object
+                                    additionalProperties:
+                                      type: string
+                                  request:
+                                    type: string
+                                  input_cache_read:
+                                    type: string
+                                  input_cache_write:
+                                    type: string
+                                  input_cache_write_1h:
+                                    type: string
+                                  ocr_page:
+                                    type: string
+                                  input_audio_hour:
+                                    type: string
+                                required:
+                                - prompt
+                                - completion
+                              streaming:
+                                anyOf:
+                                - type: boolean
+                                - type: string
+                                  enum:
+                                  - only
+                              vision:
+                                type: boolean
+                              realtime:
+                                type: boolean
+                                description: Whether this mapping is served via the /v1/realtime WebSocket endpoint instead of /v1/chat/completions.
+                              cancellation:
+                                type: boolean
+                              tools:
+                                type: boolean
+                              parallelToolCalls:
+                                type: boolean
+                              reasoning:
+                                type: boolean
+                              reasoning_efforts:
+                                type: array
+                                items:
+                                  type: string
+                                  enum:
+                                  - none
+                                  - minimal
+                                  - low
+                                  - medium
+                                  - high
+                                  - xhigh
+                                  - max
+                                description: Exact reasoning_effort values this provider mapping accepts, in ascending order of effort. Omitted when the supported values are not declared for the mapping.
+                              reasoning_modes:
+                                type: array
+                                items:
+                                  type: string
+                                  enum:
+                                  - standard
+                                  - pro
+                                description: Exact reasoning.mode values this provider mapping accepts. Omitted when the mapping accepts no explicit mode.
+                              min_cacheable_tokens:
+                                type: number
+                                description: Minimum prompt length (in tokens) the provider requires before a prompt-cache write can occur. cache_control markers on shorter prompts are accepted but silently not cached by the provider.
+                              max_output:
+                                type: number
+                                description: Maximum output tokens this provider mapping accepts as max_tokens; larger requests are rejected with HTTP 400. Omitted when the mapping declares no limit (any max_tokens is accepted).
+                              stability:
+                                type: string
+                                enum:
+                                - stable
+                                - beta
+                                - unstable
+                                - experimental
+                            required:
+                            - providerId
+                            - externalId
+                            - streaming
+                            - vision
+                            - cancellation
+                            - tools
+                            - parallelToolCalls
+                            - reasoning
+                        pricing:
+                          type: object
+                          properties:
+                            prompt:
+                              type: string
+                            completion:
+                              type: string
+                            image:
+                              type: string
+                            input_audio:
+                              type: string
+                            input_audio_cache_read:
+                              type: string
+                            output_audio:
+                              type: string
+                            per_second:
+                              type: object
+                              additionalProperties:
+                                type: string
+                            per_image:
+                              type: object
+                              additionalProperties:
+                                type: string
+                            request:
+                              type: string
+                            input_cache_read:
+                              type: string
+                            input_cache_write:
+                              type: string
+                            input_cache_write_1h:
+                              type: string
+                            web_search:
+                              type: string
+                            internal_reasoning:
+                              type: string
+                            ocr_page:
+                              type: string
+                            input_audio_hour:
+                              type: string
+                          required:
+                          - prompt
+                          - completion
+                        context_length:
+                          type: number
+                        max_output:
+                          type: number
+                          description: Largest max_tokens value guaranteed to be accepted regardless of which provider mapping serves the request (the minimum across still-servable mappings that declare a limit; deactivated mappings are excluded). Omitted when no such mapping declares one.
+                        per_request_limits:
+                          type: object
+                          additionalProperties:
+                            type: string
+                        supported_parameters:
+                          type: array
+                          items:
+                            type: string
+                        json_output:
+                          type: boolean
+                        structured_outputs:
+                          type: boolean
+                        free:
+                          type: boolean
+                        deprecated_at:
+                          type: string
+                        deactivated_at:
+                          type: string
+                        stability:
+                          type: string
+                          enum:
+                          - stable
+                          - beta
+                          - unstable
+                          - experimental
+                      required:
+                      - id
+                      - name
+                      - display_name
+                      - family
+                      - architecture
+                      - top_provider
+                      - providers
+                      - pricing
+                      - json_output
+                      - structured_outputs
+                required:
+                - data
+        '400':
+          description: Invalid request body or parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '401':
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '402':
+          description: Insufficient credits or plan limits reached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '403':
+          description: Forbidden request or upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '404':
+          description: Unknown model or upstream not-found response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '408':
+          description: Request timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '410':
+          description: Archived or unavailable project.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '413':
+          description: Request too large.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '429':
+          description: Rate limited. Response headers describe only LLMGateway-enforced limits; upstream provider headers are not forwarded. Honor Retry-After when present.
+          headers:
+            RateLimit-Policy:
+              schema:
+                type: string
+              description: Quota policy as an HTTP Structured Fields list, e.g. "requests";q=60;w=60.
+            RateLimit:
+              schema:
+                type: string
+              description: Available quota and reset delay, e.g. "requests";r=59;t=60.
+            RateLimit-Limit:
+              schema:
+                type: string
+              description: Request limit for the current window.
+            RateLimit-Remaining:
+              schema:
+                type: string
+              description: Requests remaining in the current window.
+            RateLimit-Reset:
+              schema:
+                type: string
+              description: Seconds until the current window resets.
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '502':
+          description: Failed to connect to the upstream provider.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '503':
+          description: Service unavailable upstream response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '504':
+          description: Upstream provider timeout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+        '529':
+          description: Gateway overloaded.
+          headers:
+            Retry-After:
+              schema:
+                type: string
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAIError'
+      tags:
+      - Models
+components:
+  schemas:
+    OpenAIError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            type:
+              type: string
+            param:
+              type:
+              - string
+              - 'null'
+            code:
+              type:
+              - string
+              - 'null'
+          required:
+          - message
+          - type
+          - param
+          - code
+      required:
+      - error
+      description: OpenAI-compatible error object.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token authentication using API keys
+externalDocs:
+  url: https://docs.llmgateway.io
+  description: LLMGateway Documentation
