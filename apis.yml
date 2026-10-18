@@ -156,6 +156,8 @@ apis:
   humanURL: https://docs.llmgateway.io
   baseURL: https://api.llmgateway.io
   tags:
+  - Image
+  tags_raw:
   - Images
   properties:
   - type: OpenAPI
@@ -210,6 +212,8 @@ apis:
   humanURL: https://docs.llmgateway.io
   baseURL: https://api.llmgateway.io
   tags:
+  - Message
+  tags_raw:
   - Messages
   properties:
   - type: OpenAPI
@@ -264,6 +268,8 @@ apis:
   humanURL: https://docs.llmgateway.io
   baseURL: https://api.llmgateway.io
   tags:
+  - OCR
+  tags_raw:
   - Ocr
   properties:
   - type: OpenAPI
@@ -282,6 +288,8 @@ apis:
   humanURL: https://docs.llmgateway.io
   baseURL: https://api.llmgateway.io
   tags:
+  - Real-Time
+  tags_raw:
   - Realtime
   properties:
   - type: OpenAPI
@@ -354,6 +362,8 @@ apis:
   humanURL: https://docs.llmgateway.io
   baseURL: https://api.llmgateway.io
   tags:
+  - Video
+  tags_raw:
   - Videos
   properties:
   - type: OpenAPI
