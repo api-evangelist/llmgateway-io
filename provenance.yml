@@ -9,6 +9,9 @@ artifacts:
   authentication/llmgateway-io-authentication.yml:
     method: derived
     evidence: declared in the artifact
+  capabilities/llmgateway-io-capability-edges.yml:
+    method: unknown
+    evidence: no authorship recorded
   conformance/llmgateway-io-conformance.yml:
     method: derived
     evidence: declared in the artifact
@@ -25,24 +28,69 @@ artifacts:
     method: generated
     evidence: carries an API Evangelist house phrase
   integrations/llmgateway-io-integration-edges.yml:
-    method: unknown
-    evidence: no authorship recorded
+    method: searched
+    evidence: declared in the artifact
   json-ld/llmgateway-io-context.jsonld:
     method: unknown
     evidence: no authorship recorded
   llms/llmgateway-io-llms-provenance.yml:
-    method: unknown
-    evidence: no authorship recorded
+    method: searched
+    evidence: 'derive-llms-provenance.py: harvested'
   llms/llmgateway-io-llms.txt:
-    method: unknown
-    evidence: no authorship recorded
+    method: searched
+    evidence: 'derive-llms-provenance.py: harvested'
   mcp/llmgateway-io-mcp.yml:
     method: derived
     evidence: declared in the artifact
   openapi/_original/llmgateway-io-openapi.json:
     method: harvested
     evidence: fetched from https://api.llmgateway.io/openapi.json on 2026-10-12 (sidecar)
-  openapi/llmgateway-io-gateway-api-openapi.yml:
+  openapi/llmgateway-io-audio-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/llmgateway-io-chat-completions-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/llmgateway-io-decisions-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/llmgateway-io-embeddings-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/llmgateway-io-images-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/llmgateway-io-key-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/llmgateway-io-llm-gateway-api-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/llmgateway-io-messages-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/llmgateway-io-models-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/llmgateway-io-moderations-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/llmgateway-io-ocr-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/llmgateway-io-realtime-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/llmgateway-io-rerank-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/llmgateway-io-search-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/llmgateway-io-systemone-api-openapi.yml:
+    method: derived
+    evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
+  openapi/llmgateway-io-videos-api-openapi.yml:
     method: derived
     evidence: paths are a subset of openapi/_original/ (split from the harvested spec)
   rules/llmgateway-io-rules.yml:
