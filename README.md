@@ -64,21 +64,137 @@
 > Full detail: **[Where this data comes from](https://apievangelist.com/about/where-our-data-comes-from)**
 <!-- API-EVANGELIST-PROVENANCE:END -->
 
-LLM Gateway (https://llmgateway.io) is an OpenAI-compatible LLM gateway: one API key routes chat completions, messages, embeddings, images, audio, video, moderation, OCR, rerank, web search and typed decisions across model providers. The project is open source at https://github.com/theopenco/llmgateway.
+LLM Gateway is an OpenAI-compatible LLM gateway: one API key routes chat completions, embeddings, images, audio, video, moderation, OCR, rerank, web search and typed decisions across model providers. It publishes an OpenAPI 3.0 contract at https://api.llmgateway.io/openapi.json, which includes POST /v1/decisions (OpenAI-compatible typed, probabilistic decisions) and POST /v1/systemone (the TypeSafe System One-compatible endpoint, documented as legacy and to be deprecated in favor of /v1/decisions). An MCP server (Streamable HTTP) is served at /mcp with OAuth metadata at /.well-known/oauth-authorization-server and /.well-known/oauth-protected-resource.
 
-## APIs
+**Areas:** Artificial Intelligence · LLM Gateway · Decision Support · Structured Outputs · Inference · MCP
 
-- **LLM Gateway API** — https://api.llmgateway.io, contract published by the provider at https://api.llmgateway.io/openapi.json (saved verbatim in `openapi/_original/`, YAML copy in `openapi/`).
-- **Decisions API** — `POST /v1/decisions`, typed probabilistic decisions.
-- **System One API (legacy)** — `POST /v1/systemone`, documented as to be deprecated in favor of `/v1/decisions`.
-- **MCP Server** — Streamable HTTP at https://api.llmgateway.io/mcp, with OAuth authorization-server and protected-resource metadata under `/.well-known/` (saved in `well-known/`).
+## LLM Gateway on APIs.io
 
-## Resources
+Everything profiled for LLM Gateway is published on APIs.io rather than in this repository. Start at the provider page — **[apis.io/providers/llmgateway-io/](https://apis.io/providers/llmgateway-io/)** — or go straight to one of the APIs or properties below.
 
-- Documentation: https://docs.llmgateway.io
-- llms.txt: https://docs.llmgateway.io/llms.txt (copy in `llms/`)
-- Changelog: https://llmgateway.io/changelog
-- Pricing: https://llmgateway.io/pricing
-- Status: https://status.llmgateway.io
+### APIs (17)
 
-See `apis.yml` for the full machine-readable index of this repository's artifacts.
+- [LLM Gateway MCP Server](https://apis.io/apis/llmgateway-io/mcp/) — Model Context Protocol server (Streamable HTTP) at /mcp, as stated in the OpenAPI info.description; not probed further.
+- [LLM Gateway Audio API](https://apis.io/apis/llmgateway-io/llmgateway-io-audio-api/) — The Audio API from LLM Gateway — 2 operation(s) for audio.
+- [LLM Gateway Decisions API](https://apis.io/apis/llmgateway-io/llmgateway-io-decisions-api/) — The Decisions API from LLM Gateway — 1 operation(s) for decisions.
+- [LLM Gateway Embeddings API](https://apis.io/apis/llmgateway-io/llmgateway-io-embeddings-api/) — The Embeddings API from LLM Gateway — 1 operation(s) for embeddings.
+- [LLM Gateway Images API](https://apis.io/apis/llmgateway-io/llmgateway-io-images-api/) — The Images API from LLM Gateway — 2 operation(s) for images.
+- [LLM Gateway Key API](https://apis.io/apis/llmgateway-io/llmgateway-io-key-api/) — The Key API from LLM Gateway — 1 operation(s) for key.
+- [LLM Gateway LLM Gateway API](https://apis.io/apis/llmgateway-io/llmgateway-io-llm-gateway-api-api/) — The LLM Gateway API API from LLM Gateway — 1 operation(s) for llm gateway api.
+- [LLM Gateway Messages API](https://apis.io/apis/llmgateway-io/llmgateway-io-messages-api/) — The Messages API from LLM Gateway — 1 operation(s) for messages.
+- [LLM Gateway Models API](https://apis.io/apis/llmgateway-io/llmgateway-io-models-api/) — The Models API from LLM Gateway — 1 operation(s) for models.
+- [LLM Gateway Moderations API](https://apis.io/apis/llmgateway-io/llmgateway-io-moderations-api/) — The Moderations API from LLM Gateway — 1 operation(s) for moderations.
+- [LLM Gateway Ocr API](https://apis.io/apis/llmgateway-io/llmgateway-io-ocr-api/) — The Ocr API from LLM Gateway — 1 operation(s) for ocr.
+- [LLM Gateway Realtime API](https://apis.io/apis/llmgateway-io/llmgateway-io-realtime-api/) — The Realtime API from LLM Gateway — 1 operation(s) for realtime.
+- [LLM Gateway Rerank API](https://apis.io/apis/llmgateway-io/llmgateway-io-rerank-api/) — The Rerank API from LLM Gateway — 1 operation(s) for rerank.
+- [LLM Gateway Search API](https://apis.io/apis/llmgateway-io/llmgateway-io-search-api/) — The Search API from LLM Gateway — 1 operation(s) for search.
+- [LLM Gateway Systemone API](https://apis.io/apis/llmgateway-io/llmgateway-io-systemone-api/) — The Systemone API from LLM Gateway — 1 operation(s) for systemone.
+- [LLM Gateway Videos API](https://apis.io/apis/llmgateway-io/llmgateway-io-videos-api/) — The Videos API from LLM Gateway — 4 operation(s) for videos.
+- [LLM Gateway Chat Completions API](https://apis.io/apis/llmgateway-io/llmgateway-io-chat-completions-api/) — The Chat Completions API from LLM Gateway — 1 operation(s) for chat completions.
+
+### Published properties
+
+Each property below is a page on APIs.io carrying the machine-readable artifact and what it says.
+
+#### MCP servers (2)
+
+Model Context Protocol servers that expose the API to agents.
+
+- [llmgateway-io-mcp.yml](https://apis.io/servers/llmgateway-io/llmgateway-io-mcp-yml/)
+- [mcp](https://apis.io/servers/llmgateway-io/mcp/)
+
+#### Agentic access (1)
+
+Which operations an agent can call, which act, and which need a human in the loop.
+
+- [Llmgateway Io Agentic Access](https://apis.io/agentic-access/llmgateway-io/llmgateway-io-agentic-access/)
+
+#### JSON-LD (1)
+
+Linked-data contexts for the provider's vocabulary.
+
+- [Llmgateway Io Context](https://apis.io/jsonld/llmgateway-io/llmgateway-io-context/)
+
+#### Governance rules (1)
+
+Spectral rulesets for the provider's contracts.
+
+- [LLM Gateway API Rules](https://apis.io/rules/llmgateway-io/llmgateway-io-rules/)
+
+#### Security (3)
+
+Authentication, trust centre, and vulnerability disclosure.
+
+- [Llmgateway Io Authentication](https://apis.io/security/llmgateway-io/llmgateway-io-authentication/)
+- [Llmgateway Io Domain Security](https://apis.io/security/llmgateway-io/llmgateway-io-domain-security/)
+- [Llmgateway Io Trust Center](https://apis.io/security/llmgateway-io/llmgateway-io-trust-center/)
+
+## Where to find this API
+
+Links to the company's own pages. This repository publishes no copy of their specifications — the canonical document is theirs and lives at the URLs below.
+
+- [Website](https://llmgateway.io)
+- [Documentation](https://docs.llmgateway.io)
+- [Getting started](https://docs.llmgateway.io/quick-start)
+- [Pricing](https://llmgateway.io/pricing)
+- [Changelog](https://llmgateway.io/changelog)
+- [Blog](https://llmgateway.io/blog)
+- [Compliance](https://security.llmgateway.io/)
+- [Terms of service](https://llmgateway.io/legal/terms)
+- [Privacy policy](https://llmgateway.io/legal/privacy)
+- [GitHub](https://github.com/theopenco)
+
+## API Evangelist rating
+
+**Kin Score 47.6** — developing · rubric 0.25.0 · scored 2026-10-23
+
+| Facet | Score |
+|---|---|
+| Discoverability | 73.2 |
+| Contract quality | 50.4 |
+| Contract governance | 22.0 |
+| Operational transparency | 21.1 |
+| Developer ergonomics | 45.2 |
+| Access clarity | 60.5 |
+
+**Agent readiness 48.6** — agent-ready (gated down from agent-native)
+
+| Agent-readiness dimension | Result |
+|---|---|
+| Spec Presence | yes |
+| Agentic Access | derived (partial credit) |
+| Reversibility Documented | — |
+| MCP Server | — |
+| Auth Clarity | served (partial credit) |
+| Idempotency | — |
+| Error Semantics | verified |
+| OpenAPI Examples | verified |
+| Rate Limit Signal | verified |
+| Event Surface Described | — |
+| Agent Skills | — |
+| Well Known Catalog | — |
+| Consent Identity | — |
+| Agent Card | — |
+| Dry Run Mode | — |
+| Delegated Identity | served (partial credit) |
+| Protected Resource Metadata | verified |
+| Dynamic Client Registration | yes |
+| Agentic Commerce | — |
+| Pagination Ratio | — |
+| Operation Distinctiveness | distinct |
+
+**Regulatory alignment 27.3** — Horizontal (data, software, accessibility, platform)
+
+The rubric is published at [github.com/api-evangelist/kin-score](https://github.com/api-evangelist/kin-score). The per-check breakdown behind these numbers — which checks were earned, partial or missed — along with score history and how this provider compares to its peers, is available at [apis.io/providers/llmgateway-io/](https://apis.io/providers/llmgateway-io/).
+
+## How this profile is made
+
+API Evangelist profiles a company's public API surface the way a developer would find it: the website, developer portal and documentation, the specifications it publishes, its public repositories, and its pricing, status and changelog pages. From that it derives the properties above — contracts split per API, workflows, schemas, collections, governance rules, plans and rate limits — and scores them against the published [Kin Score rubric](https://github.com/api-evangelist/kin-score).
+
+The artifacts are published on [APIs.io](https://apis.io), not in this repository. This repository is the public record for LLM Gateway: the place to say something is wrong, missing or out of date, and to ask for a re-score or a removal.
+
+## Open an issue
+
+- **Something about this listing** — a wrong description, a missing API, a stale artifact or a question about the rating: [open an issue on this repository](https://github.com/api-evangelist/llmgateway-io/issues/new).
+- **A new API, or one that is not in the catalog yet** — [submit it on APIs.io](https://apis.io/add/).
+- **Anything else** — [the APIs.io inbox](https://github.com/api-search/inbox/issues/new) or [info@apievangelist.com](mailto:info@apievangelist.com).
